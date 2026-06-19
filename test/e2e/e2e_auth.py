@@ -1,4 +1,4 @@
-"""E2E Bearer JWT aligned with the umbrella welcome page (``index.html``) persona tokens (TOKEN_ADAM).
+"""E2E Bearer JWT for black-box API tests (Developer Edition ``login.html`` persona defaults).
 
 Uses ``JWT_SECRET``, ``JWT_ISSUER``, ``JWT_AUDIENCE``, and ``JWT_ALGORITHM`` from the
 environment when set (``pipenv run e2e`` exports the Developer Edition defaults). Override
@@ -12,7 +12,7 @@ import time
 
 import jwt
 
-# Defaults match index.html static welcome tokens (HS256, iss dev-idp, aud dev-api) and Pipfile dev/e2e.
+# Defaults match login.html / compose JWT settings (HS256, iss dev-idp, aud dev-api) and Pipfile dev/e2e.
 _DEFAULT_JWT_SECRET = "local-dev-jwt-secret-fixed"
 _DEFAULT_JWT_ISSUER = "dev-idp"
 _DEFAULT_JWT_AUDIENCE = "dev-api"
