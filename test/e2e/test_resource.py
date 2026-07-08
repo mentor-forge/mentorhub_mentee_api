@@ -10,6 +10,7 @@ To run these tests:
 
 API runs on port 8393 (same for dev and api).
 """
+
 import pytest
 import requests
 
@@ -26,33 +27,58 @@ def _err(response, expected):
 
 @pytest.mark.e2e
 def test_get_resources_endpoint():
-    """Test GET /api/resource endpoint."""
+    """Test GET /api/resource endpoint returns a JSON array."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
     assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
-    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert "limit" in response_data, "Response should have 'limit' key"
-    assert "has_more" in response_data, "Response should have 'has_more' key"
-    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
+    assert isinstance(response_data, list), "Response should be a JSON array"
 
 
 @pytest.mark.e2e
-def test_get_resources_with_name_filter():
-    """Test GET /api/resource with name query parameter."""
+def test_get_resources_with_pagination_headers():
+    """Test GET /api/resource with offset/size headers."""
     token = get_auth_token()
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/resource?name=test", headers=headers)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "offset": "0",
+        "size": "5",
+    }
+    response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
     assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
-    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
+    assert isinstance(response_data, list), "Response should be a JSON array"
+    assert len(response_data) <= 5, "Response should respect size header"
+
+
+@pytest.mark.e2e
+def test_get_resource_detail():
+    """Test GET /api/resource/<id> returns composite detail."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    if not resources:
+        pytest.skip("No resources available for detail test")
+
+    resource_id = resources[0]["_id"]
+    response = requests.get(
+        f"{BASE_URL}/api/resource/{resource_id}",
+        headers=headers,
+    )
+    assert response.status_code == 200, _err(response, 200)
+
+    detail = response.json()
+    assert "resource" in detail, "Detail should include resource"
+    assert "aggregation" in detail, "Detail should include aggregation"
+    assert "notes" in detail, "Detail should include notes"
+    assert isinstance(detail["notes"], list), "notes should be an array"
+    assert detail["resource"]["_id"] == resource_id
 
 
 @pytest.mark.e2e
