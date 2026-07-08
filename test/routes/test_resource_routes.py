@@ -1,6 +1,7 @@
 """
 Unit tests for Resource routes (consume-style, read-only).
 """
+
 import unittest
 from unittest.mock import patch
 from flask import Flask
@@ -20,7 +21,10 @@ class TestResourceRoutes(unittest.TestCase):
         self.client = self.app.test_client()
 
         self.mock_token = {"user_id": "test_user", "roles": ["developer"]}
-        self.mock_breadcrumb = {"at_time": "sometime", "correlation_id": "correlation_ID"}
+        self.mock_breadcrumb = {
+            "at_time": "sometime",
+            "correlation_id": "correlation_ID",
+        }
 
     @patch("src.routes.resource_routes.create_flask_token")
     @patch("src.routes.resource_routes.create_flask_breadcrumb")
@@ -31,72 +35,55 @@ class TestResourceRoutes(unittest.TestCase):
         mock_create_breadcrumb,
         mock_create_token,
     ):
-        """Test GET /api/resource for successful response."""
+        """Test GET /api/resource for successful array response."""
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
-        mock_get_resources.return_value = {
-            "items": [
-                {"_id": "123", "name": "resource1"},
-                {"_id": "456", "name": "resource2"},
-            ],
-            "limit": 10,
-            "has_more": False,
-            "next_cursor": None,
-        }
+        mock_get_resources.return_value = [
+            {"_id": "123", "name": "resource1"},
+            {"_id": "456", "name": "resource2"},
+        ]
 
         response = self.client.get("/api/resource")
 
         self.assertEqual(response.status_code, 200)
         data = response.json
-        self.assertIsInstance(data, dict)
-        self.assertIn("items", data)
-        self.assertEqual(len(data["items"]), 2)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 2)
         mock_get_resources.assert_called_once_with(
             self.mock_token,
             self.mock_breadcrumb,
-            name=None,
-            after_id=None,
-            limit=10,
-            sort_by="name",
-            order="asc",
+            offset=0,
+            size=20,
         )
 
     @patch("src.routes.resource_routes.create_flask_token")
     @patch("src.routes.resource_routes.create_flask_breadcrumb")
     @patch("src.routes.resource_routes.ResourceService.get_resources")
-    def test_get_resources_with_name_filter(
+    def test_get_resources_with_pagination_headers(
         self,
         mock_get_resources,
         mock_create_breadcrumb,
         mock_create_token,
     ):
-        """Test GET /api/resource with name query parameter."""
+        """Test GET /api/resource with offset/size headers."""
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
-        mock_get_resources.return_value = {
-            "items": [{"_id": "123", "name": "test-resource"}],
-            "limit": 10,
-            "has_more": False,
-            "next_cursor": None,
-        }
+        mock_get_resources.return_value = [{"_id": "123", "name": "resource1"}]
 
-        response = self.client.get("/api/resource?name=test")
+        response = self.client.get(
+            "/api/resource",
+            headers={"offset": "5", "size": "10"},
+        )
 
         self.assertEqual(response.status_code, 200)
-        data = response.json
-        self.assertIsInstance(data, dict)
-        self.assertIn("items", data)
-        self.assertEqual(len(data["items"]), 1)
+        self.assertIsInstance(response.json, list)
         mock_get_resources.assert_called_once_with(
             self.mock_token,
             self.mock_breadcrumb,
-            name="test",
-            after_id=None,
-            limit=10,
-            sort_by="name",
-            order="asc",
+            offset=5,
+            size=10,
         )
 
     @patch("src.routes.resource_routes.create_flask_token")
@@ -108,20 +95,23 @@ class TestResourceRoutes(unittest.TestCase):
         mock_create_breadcrumb,
         mock_create_token,
     ):
-        """Test GET /api/resource/<id> for successful response."""
+        """Test GET /api/resource/<id> for successful composite response."""
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
         mock_get_resource.return_value = {
-            "_id": "123",
-            "name": "resource1",
+            "resource": {"_id": "123", "name": "resource1"},
+            "aggregation": {"resource_id": "123", "note_count": 1},
+            "notes": [{"_id": "note1", "resource_id": "123"}],
         }
 
         response = self.client.get("/api/resource/123")
 
         self.assertEqual(response.status_code, 200)
         data = response.json
-        self.assertEqual(data["_id"], "123")
+        self.assertEqual(data["resource"]["_id"], "123")
+        self.assertIn("aggregation", data)
+        self.assertIn("notes", data)
         mock_get_resource.assert_called_once_with(
             "123", self.mock_token, self.mock_breadcrumb
         )
@@ -141,9 +131,7 @@ class TestResourceRoutes(unittest.TestCase):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
-        mock_get_resource.side_effect = HTTPNotFound(
-            "Resource 999 not found"
-        )
+        mock_get_resource.side_effect = HTTPNotFound("Resource 999 not found")
 
         response = self.client.get("/api/resource/999")
 
