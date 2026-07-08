@@ -804,86 +804,52 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/Resource:
+  /api/resource:
     get:
       tags:
         - Resource
       summary: Get all Resource documents
-      description: Retrieve infinite scroll batch of sorted, filtered Resource documents (read-only)
+      description: |
+        Retrieve a paginated array of Resource documents (read-only).
+
+        Pagination is controlled by request headers:
+        - `offset` — zero-based start index (default `0`)
+        - `size` — page size (default `20`, maximum `100`)
+
+        Non-`admin` callers receive only resources whose `status` is not `archived`.
+        Users with the `admin` role may see all resources, including `archived`.
       operationId: getResources
       security:
         - bearerAuth: []
       parameters:
-        - name: name
-          in: query
+        - name: offset
+          in: header
           required: false
-          description: Optional name filter (supports partial matches, case-insensitive)
+          description: Zero-based index of the first resource to return
           schema:
-            type: string
-            example: my-Resource
-        - name: after_id
-          in: query
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+        - name: size
+          in: header
           required: false
-          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-        - name: limit
-          in: query
-          required: false
-          description: Items per page (max 100)
+          description: Number of resources to return (max 100)
           schema:
             type: integer
             minimum: 1
             maximum: 100
-            default: 10
-            example: 10
-        - name: sort_by
-          in: query
-          required: false
-          description: Field to sort by (name, description)
-          schema:
-            type: string
-            default: name
-            example: name
-        - name: order
-          in: query
-          required: false
-          description: Sort order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: asc
-            example: asc
+            default: 20
+            example: 20
       responses:
         '200':
           description: Successfully retrieved Resources
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - items
-                  - limit
-                  - has_more
-                  - next_cursor
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Resource'
-                  limit:
-                    type: integer
-                    example: 10
-                  has_more:
-                    type: boolean
-                    example: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                    pattern: '^[0-9a-fA-F]{24}$'
-                    example: 507f1f77bcf86cd799439011
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -976,17 +942,19 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/Resource/{ResourceId}:
+  /api/resource/{resource_id}:
     get:
       tags:
         - Resource
-      summary: Get Resource by ResourceId
-      description: Retrieve a specific Resource document by its ResourceId (read-only)
+      summary: Get Resource detail by ID
+      description: |
+        Retrieve a Resource detail composite (read-only): the Resource document,
+        its Resource_Aggregation metrics (or `null` when none exists), and related Notes.
       operationId: getResource
       security:
         - bearerAuth: []
       parameters:
-        - name: ResourceId
+        - name: resource_id
           in: path
           required: true
           description: The Resource ID (MongoDB ObjectId)
@@ -996,11 +964,11 @@ paths:
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved Resource
+          description: Successfully retrieved Resource detail
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Resource'
+                $ref: '#/components/schemas/ResourceDetail'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1415,31 +1383,190 @@ components:
           example: active
     Resource:
       type: object
-      description: Resource domain document (read-only)
+      description: A learning resource (link) (read-only)
       additionalProperties: false
-      required:
-        - _id
-        - name
       properties:
         _id:
           type: string
-          description: MongoDB document ID
+          description: The unique identifier for the Resource
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: Resource name
+          description: The searchable name of the document
           pattern: '^[^\s]{1,40}$'
           example: my-Resource
         description:
           type: string
-          description: Resource description
+          description: The description of the Resource
           pattern: '^[^\t\n]{0,255}$'
           example: A sample Resource document
+        url:
+          type: string
+          description: The link for the resource
+          format: uri
+          example: https://example.com/resource
+        type:
+          type: string
+          description: What type of resource
+          enum:
+            - article
+            - audio
+            - book
+            - getting-started
+            - in-person
+            - lesson
+            - manual
+            - membership
+            - online-class
+            - online-instructor
+            - tutorial
+            - video
+          example: article
+        cost:
+          type: string
+          description: The cost to use this resource
+          enum:
+            - $
+            - $$
+            - $$$
+            - S$
+            - S$$
+            - S$$$
+            - free
+          example: free
+        skill_level:
+          type: string
+          description: The skill level
+          enum:
+            - Candidate
+            - Apprentice
+            - Practioneer
+            - Craftsperson
+            - Master
+            - Distinguished
+          example: Apprentice
+        interests:
+          type: array
+          description: A list of interests this resource is related to
+          items:
+            type: string
+            enum:
+              - ux
+              - api
+              - sre
+              - data
+              - design
+              - games
+              - iot
+              - robot
+        technologies:
+          type: array
+          description: A list of technologies this resource covers
+          items:
+            type: string
+            enum:
+              - React
+              - MongoDB
+              - Python
+              - TypeScript
+              - Java
+              - HTML
+              - CSS
+              - Other
+        last_verified:
+          type: string
+          format: date-time
+          description: When was this resource link last verified
+          example: "2024-01-15T10:00:00Z"
         status:
           type: string
-          description: Resource status
+          description: Status of the document
+          enum:
+            - active
+            - archived
+            - failed
           example: active
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    ResourceAggregation:
+      type: object
+      description: Resource level rating and note count metrics
+      additionalProperties: false
+      required:
+        - _id
+        - resource_id
+        - rating_sum
+        - created
+        - last_saved
+      properties:
+        _id:
+          type: string
+          description: A unique identifier for Resource_Aggregation
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        resource_id:
+          type: string
+          description: The Resource that is rated
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        note_count:
+          type: integer
+          minimum: 0
+          description: The number of notes left on this resource
+          example: 3
+        completions:
+          type: integer
+          minimum: 0
+          description: The number of times this resource has been completed
+          example: 5
+        hits:
+          type: integer
+          minimum: 0
+          description: The number of times this URL has been clicked
+          example: 12
+        duration:
+          type: string
+          description: The total duration of all completions (ISO 8601 duration)
+          pattern: '^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+(\.\d+)?S)?)?$'
+          example: PT2H30M
+        rating_count:
+          type: integer
+          minimum: 0
+          description: The number of ratings (should equal completions)
+          example: 5
+        rating_sum:
+          type: integer
+          minimum: 0
+          description: The sum of all ratings
+          example: 20
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        last_saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    ResourceDetail:
+      type: object
+      description: Composite Resource detail view (resource + aggregation + notes)
+      additionalProperties: false
+      required:
+        - resource
+        - notes
+      properties:
+        resource:
+          $ref: '#/components/schemas/Resource'
+        aggregation:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ResourceAggregation'
+        notes:
+          type: array
+          description: Notes related to this resource
+          items:
+            $ref: '#/components/schemas/Note'
     Path:
       type: object
       description: Path domain document (read-only)
