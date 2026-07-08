@@ -1,6 +1,7 @@
 """
 Unit tests for Note service.
 """
+
 import unittest
 from unittest.mock import patch, MagicMock
 from bson import ObjectId
@@ -44,9 +45,7 @@ class TestNoteService(unittest.TestCase):
             "status": "active",
         }
 
-        note_id = NoteService.create_note(
-            data, self.mock_token, self.mock_breadcrumb
-        )
+        note_id = NoteService.create_note(data, self.mock_token, self.mock_breadcrumb)
 
         self.assertEqual(note_id, "123")
         mock_mongo.create_document.assert_called_once()
@@ -71,9 +70,7 @@ class TestNoteService(unittest.TestCase):
 
         data = {"_id": "should-be-removed", "name": "test"}
 
-        NoteService.create_note(
-            data, self.mock_token, self.mock_breadcrumb
-        )
+        NoteService.create_note(data, self.mock_token, self.mock_breadcrumb)
 
         call_args = mock_mongo.create_document.call_args
         created_data = call_args[0][1]
@@ -103,9 +100,7 @@ class TestNoteService(unittest.TestCase):
         mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
 
-        result = NoteService.get_notes(
-            self.mock_token, self.mock_breadcrumb, limit=10
-        )
+        result = NoteService.get_notes(self.mock_token, self.mock_breadcrumb, limit=10)
 
         self.assertIn("items", result)
         self.assertIn("limit", result)
@@ -128,9 +123,7 @@ class TestNoteService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
-            NoteService.get_notes(
-                self.mock_token, self.mock_breadcrumb, limit=0
-            )
+            NoteService.get_notes(self.mock_token, self.mock_breadcrumb, limit=0)
         self.assertIn("limit must be >= 1", str(context.exception))
 
     @patch("src.services.note_service.Config.get_instance")
@@ -145,9 +138,7 @@ class TestNoteService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
-            NoteService.get_notes(
-                self.mock_token, self.mock_breadcrumb, limit=101
-            )
+            NoteService.get_notes(self.mock_token, self.mock_breadcrumb, limit=101)
         self.assertIn("limit must be <= 100", str(context.exception))
 
     @patch("src.services.note_service.Config.get_instance")
@@ -205,7 +196,9 @@ class TestNoteService(unittest.TestCase):
                 self.mock_breadcrumb,
                 after_id="invalid",
             )
-        self.assertIn("after_id must be a valid MongoDB ObjectId", str(context.exception))
+        self.assertIn(
+            "after_id must be a valid MongoDB ObjectId", str(context.exception)
+        )
 
     @patch("src.services.note_service.Config.get_instance")
     @patch("src.services.note_service.MongoIO.get_instance")
@@ -222,9 +215,7 @@ class TestNoteService(unittest.TestCase):
         }
         mock_get_mongo.return_value = mock_mongo
 
-        result = NoteService.get_note(
-            "123", self.mock_token, self.mock_breadcrumb
-        )
+        result = NoteService.get_note("123", self.mock_token, self.mock_breadcrumb)
 
         self.assertIsNotNone(result)
         self.assertEqual(result["_id"], "123")
@@ -243,9 +234,7 @@ class TestNoteService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPNotFound) as context:
-            NoteService.get_note(
-                "999", self.mock_token, self.mock_breadcrumb
-            )
+            NoteService.get_note("999", self.mock_token, self.mock_breadcrumb)
         self.assertIn("999", str(context.exception))
 
     @patch("src.services.note_service.Config.get_instance")
@@ -293,23 +282,17 @@ class TestNoteService(unittest.TestCase):
 
         data = {"_id": "999", "name": "Updated"}
         with self.assertRaises(HTTPForbidden) as context:
-            NoteService.update_note(
-                "123", data, self.mock_token, self.mock_breadcrumb
-            )
+            NoteService.update_note("123", data, self.mock_token, self.mock_breadcrumb)
         self.assertIn("_id", str(context.exception))
 
         data = {"created": {"at_time": "2024-01-01T00:00:00Z"}, "name": "Updated"}
         with self.assertRaises(HTTPForbidden) as context:
-            NoteService.update_note(
-                "123", data, self.mock_token, self.mock_breadcrumb
-            )
+            NoteService.update_note("123", data, self.mock_token, self.mock_breadcrumb)
         self.assertIn("created", str(context.exception))
 
         data = {"saved": {"at_time": "2024-01-01T00:00:00Z"}, "name": "Updated"}
         with self.assertRaises(HTTPForbidden) as context:
-            NoteService.update_note(
-                "123", data, self.mock_token, self.mock_breadcrumb
-            )
+            NoteService.update_note("123", data, self.mock_token, self.mock_breadcrumb)
         self.assertIn("saved", str(context.exception))
 
     @patch("src.services.note_service.Config.get_instance")
@@ -363,9 +346,7 @@ class TestNoteService(unittest.TestCase):
 
     @patch("src.services.note_service.Config.get_instance")
     @patch("src.services.note_service.MongoIO.get_instance")
-    def test_create_note_handles_exception(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_create_note_handles_exception(self, mock_get_mongo, mock_get_config):
         """Test create_note handles database exceptions."""
         mock_config = MagicMock()
         mock_config.NOTE_COLLECTION_NAME = "Note"
@@ -382,9 +363,7 @@ class TestNoteService(unittest.TestCase):
 
     @patch("src.services.note_service.Config.get_instance")
     @patch("src.services.note_service.MongoIO.get_instance")
-    def test_get_notes_handles_exception(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_get_notes_handles_exception(self, mock_get_mongo, mock_get_config):
         """Test get_notes handles database exceptions."""
         mock_config = MagicMock()
         mock_config.NOTE_COLLECTION_NAME = "Note"
@@ -398,15 +377,11 @@ class TestNoteService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
-            NoteService.get_notes(
-                self.mock_token, self.mock_breadcrumb
-            )
+            NoteService.get_notes(self.mock_token, self.mock_breadcrumb)
 
     @patch("src.services.note_service.Config.get_instance")
     @patch("src.services.note_service.MongoIO.get_instance")
-    def test_get_note_handles_exception(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_get_note_handles_exception(self, mock_get_mongo, mock_get_config):
         """Test get_note handles database exceptions."""
         mock_config = MagicMock()
         mock_config.NOTE_COLLECTION_NAME = "Note"
@@ -417,15 +392,11 @@ class TestNoteService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
-            NoteService.get_note(
-                "123", self.mock_token, self.mock_breadcrumb
-            )
+            NoteService.get_note("123", self.mock_token, self.mock_breadcrumb)
 
     @patch("src.services.note_service.Config.get_instance")
     @patch("src.services.note_service.MongoIO.get_instance")
-    def test_update_note_handles_exception(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_update_note_handles_exception(self, mock_get_mongo, mock_get_config):
         """Test update_note handles database exceptions."""
         mock_config = MagicMock()
         mock_config.NOTE_COLLECTION_NAME = "Note"
@@ -438,6 +409,57 @@ class TestNoteService(unittest.TestCase):
         with self.assertRaises(HTTPInternalServerError):
             NoteService.update_note(
                 "123", {"name": "updated"}, self.mock_token, self.mock_breadcrumb
+            )
+
+    @patch("src.services.note_service.Config.get_instance")
+    @patch("src.services.note_service.MongoIO.get_instance")
+    def test_get_notes_for_resource_success(self, mock_get_mongo, mock_get_config):
+        """Test retrieval of notes for a specific resource."""
+        mock_config = MagicMock()
+        mock_config.NOTE_COLLECTION_NAME = "Note"
+        mock_get_config.return_value = mock_config
+
+        resource_id = "507f1f77bcf86cd799439011"
+        mock_collection = MagicMock()
+        mock_cursor = MagicMock()
+        mock_collection.find.return_value = mock_cursor
+        mock_cursor.sort.return_value = mock_cursor
+        mock_cursor.__iter__ = lambda self: iter(
+            [
+                {
+                    "_id": ObjectId("507f1f77bcf86cd799439012"),
+                    "resource_id": ObjectId(resource_id),
+                    "note": "A note",
+                }
+            ]
+        )
+
+        mock_mongo = MagicMock()
+        mock_mongo.get_collection.return_value = mock_collection
+        mock_get_mongo.return_value = mock_mongo
+
+        result = NoteService.get_notes_for_resource(
+            resource_id, self.mock_token, self.mock_breadcrumb
+        )
+
+        self.assertEqual(len(result), 1)
+        mock_collection.find.assert_called_once_with(
+            {"resource_id": ObjectId(resource_id)}
+        )
+        mock_cursor.sort.assert_called_once_with("created.at_time", -1)
+
+    @patch("src.services.note_service.Config.get_instance")
+    @patch("src.services.note_service.MongoIO.get_instance")
+    def test_get_notes_for_resource_invalid_id(self, mock_get_mongo, mock_get_config):
+        """Test get_notes_for_resource raises HTTPBadRequest for invalid resource_id."""
+        mock_config = MagicMock()
+        mock_config.NOTE_COLLECTION_NAME = "Note"
+        mock_get_config.return_value = mock_config
+        mock_get_mongo.return_value = MagicMock()
+
+        with self.assertRaises(HTTPBadRequest):
+            NoteService.get_notes_for_resource(
+                "invalid", self.mock_token, self.mock_breadcrumb
             )
 
 
