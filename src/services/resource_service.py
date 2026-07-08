@@ -47,7 +47,8 @@ class ResourceService:
 
     @staticmethod
     def _is_admin(token, config):
-        return config.ROLE_ADMIN in token.get("roles", [])
+        admin_role = getattr(config, "ROLE_ADMIN", "admin")
+        return admin_role in token.get("roles", [])
 
     @staticmethod
     def _validate_pagination(offset, size):

@@ -50,9 +50,10 @@ class AggregationService:
 
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            collection = mongo.get_collection(
-                config.RESOURCE_AGGREGATION_COLLECTION_NAME
+            collection_name = getattr(
+                config, "RESOURCE_AGGREGATION_COLLECTION_NAME", "Resource_Aggregation"
             )
+            collection = mongo.get_collection(collection_name)
             aggregation = collection.find_one({"resource_id": resource_object_id})
 
             logger.info(
