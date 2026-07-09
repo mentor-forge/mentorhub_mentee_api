@@ -148,7 +148,7 @@ paths:
             example: asc
       responses:
         '200':
-          description: Successfully retrieved controls
+          description: Successfully retrieved Journeys
           content:
             application/json:
               schema:
@@ -162,7 +162,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Control'
+                      $ref: '#/components/schemas/Journey'
                   limit:
                     type: integer
                     example: 10
