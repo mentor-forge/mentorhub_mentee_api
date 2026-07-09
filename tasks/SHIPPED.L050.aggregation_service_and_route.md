@@ -1,6 +1,6 @@
 # L050 – Aggregation service, route, and mutation helpers
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L040  
 **Description**: Extend `AggregationService` with get-or-create detail reads (including related notes via `NoteService`), increment helpers for future Event/Journey callers, and expose `GET /api/aggregation/{resource_id}`.
@@ -98,4 +98,11 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Extended `AggregationService` with get-or-create detail, `add_completion` (mentee RBAC), and `add_hit`.
+- Added `GET /api/aggregation/<resource_id>` route and registered blueprint in `server.py`.
+- Added unit and E2E tests for aggregation endpoints.
+
+**Testing**
+- `pipenv run test`: 64 passed (aggregation tests included), 63 skipped, 23 deselected.
+- `pipenv run build`: clean.
