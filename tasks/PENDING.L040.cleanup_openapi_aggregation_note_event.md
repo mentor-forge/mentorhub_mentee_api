@@ -13,16 +13,11 @@ Always read these files before implementation:
 - `../mentorhub_api_utils/README.md`
 - `README.md`
 - `docs/openapi.yaml` — current spec (includes stale Rating paths and Note/Event GET operations)
+- `src/server.py` - runtime entrypoint, route registration
 - `src/routes/note_routes.py` — runtime already exposes POST-only `/api/note`
 - `src/routes/event_routes.py` — runtime still exposes GET; spec should document POST-only target contract
 - `tasks/SHIPPED.L010.update_resource_openapi.md` — `ResourceAggregation` schema and lowercase path conventions
 - `tasks/SHIPPED.L030.resource_detail_aggregation_and_notes.md` — prior aggregation/notes composite patterns
-
-MongoDB dictionary references (for schema alignment):
-
-- `../mentorhub_mongodb_api/configurator/dictionaries/Note.0.1.0.yaml`
-- `../mentorhub_mongodb_api/configurator/dictionaries/Event.0.1.0.yaml`
-- `../mentorhub_mongodb_api/configurator/dictionaries/Resource_Aggregation.1.0.0.yaml`
 
 Configurator schema URLs (start `pipenv run db` if needed):
 

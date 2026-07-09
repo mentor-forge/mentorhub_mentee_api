@@ -16,8 +16,6 @@ Always read these files before implementation:
 - `src/services/aggregation_service.py` — existing read-by-`resource_id` helper
 - `src/services/note_service.py` — `get_notes_for_resource` for service-to-service note lookup
 - `api_utils.Config` — `RESOURCE_AGGREGATION_COLLECTION_NAME`, `ROLE_MENTEE` (default `"mentee"`)
-- `../mentorhub_mongodb_api/configurator/dictionaries/Resource_Aggregation.1.0.0.yaml`
-- `../mentorhub_mongodb_api/erd.svg` — Resource ↔ Note ↔ Resource_Aggregation relationships
 - `tasks/SHIPPED.L030.resource_detail_aggregation_and_notes.md` — service-to-service pattern reference
 
 Additional inputs:
@@ -25,13 +23,20 @@ Additional inputs:
 - `src/server.py` — route registration
 - `test/services/test_aggregation_service.py` — extend existing tests
 - `test/routes/test_resource_routes.py` — route test patterns
+- Configurator schemas (start `pipenv run db` if needed):
+
+```bash
+curl -X GET "http://localhost:8383/api/configurations/json_schema/Note.yaml/latest/" -H "accept: application/json"
+curl -X GET "http://localhost:8383/api/configurations/json_schema/Event.yaml/latest/" -H "accept: application/json"
+curl -X GET "http://localhost:8383/api/configurations/json_schema/Resource_Aggregation.yaml/latest/" -H "accept: application/json"
+```
 
 ## Goals
 
 - **`AggregationService` enhancements** (`src/services/aggregation_service.py`):
   - **`get_aggregation_detail(resource_id, token, breadcrumb)`**:
-    - `_check_permission(token, 'read')` — any authenticated user (no additional role gate).
-    - Validate `resource_id` as a MongoDB ObjectId (`400` on invalid).
+    - `_check_permission(token, 'read')` — pass any authenticated user (no additional role gate).
+    - Leave validation of `resource_id` to mongodb validation.
     - Look up aggregation by `resource_id`; if none exists, **create** a new document with:
       - `resource_id`, zeroed counters (`note_count`, `completions`, `hits`, `rating_count`), `rating_sum: 0`, zero/initial `duration`, and `created`/`last_saved` breadcrumbs.
     - Fetch related notes via **service-to-service** call to `NoteService.get_notes_for_resource` (import inside method to avoid circular imports).
