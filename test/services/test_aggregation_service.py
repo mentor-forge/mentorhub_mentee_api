@@ -53,7 +53,7 @@ class TestAggregationService(unittest.TestCase):
 
         self.assertEqual(result["note_count"], 3)
         mock_collection.find_one.assert_called_once_with(
-            {"resource_id": ObjectId(self.resource_id)}
+            {"_id": ObjectId(self.resource_id)}
         )
 
     @patch("src.services.aggregation_service.Config.get_instance")
@@ -139,8 +139,8 @@ class TestAggregationService(unittest.TestCase):
         mock_get_config.return_value = mock_config
 
         created_doc = {
-            "_id": ObjectId("507f1f77bcf86cd799439012"),
-            "resource_id": ObjectId(self.resource_id),
+            "_id": ObjectId(self.resource_id),
+            "note_count": 0,
             "hits": 0,
             "rating_sum": 0,
         }
@@ -150,7 +150,7 @@ class TestAggregationService(unittest.TestCase):
 
         mock_mongo = MagicMock()
         mock_mongo.get_collection.return_value = mock_collection
-        mock_mongo.create_document.return_value = "507f1f77bcf86cd799439012"
+        mock_mongo.create_document.return_value = self.resource_id
         mock_mongo.get_document.return_value = created_doc
         mock_get_mongo.return_value = mock_mongo
         mock_get_notes.return_value = []

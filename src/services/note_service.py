@@ -5,6 +5,7 @@ Handles RBAC checks and MongoDB operations for Note domain.
 """
 
 from api_utils import MongoIO, Config
+from api_utils.mongo_utils import encode_document
 from api_utils.flask_utils.exceptions import (
     HTTPBadRequest,
     HTTPForbidden,
@@ -14,6 +15,9 @@ from api_utils.flask_utils.exceptions import (
 import logging
 
 logger = logging.getLogger(__name__)
+
+ID_PROPERTIES = ["_id", "resource_id", "profile_id"]
+DATE_PROPERTIES = []
 
 
 class NoteService:
@@ -44,6 +48,8 @@ class NoteService:
 
             if "_id" in data:
                 del data["_id"]
+
+            encode_document(data, ID_PROPERTIES, DATE_PROPERTIES)
 
             data["created"] = breadcrumb
             data["saved"] = breadcrumb

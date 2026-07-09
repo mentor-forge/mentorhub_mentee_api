@@ -40,7 +40,8 @@ def test_get_aggregation_detail_endpoint():
     assert "notes" in detail, "Detail should include notes"
     assert isinstance(detail["notes"], list), "notes should be an array"
     assert detail["aggregation"] is not None
-    assert detail["aggregation"].get("resource_id") == resource_id
+    agg = detail["aggregation"]
+    assert agg.get("_id") == resource_id or agg.get("resource_id") == resource_id
 
 
 @pytest.mark.e2e

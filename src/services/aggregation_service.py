@@ -90,9 +90,16 @@ class AggregationService:
                 raise HTTPForbidden("Mentee role required to record completions")
 
     @staticmethod
+    def _find_aggregation(collection, resource_object_id):
+        aggregation = collection.find_one({"_id": resource_object_id})
+        if aggregation is not None:
+            return aggregation
+        return collection.find_one({"resource_id": resource_object_id})
+
+    @staticmethod
     def _new_aggregation_document(resource_object_id, breadcrumb):
         return {
-            "resource_id": resource_object_id,
+            "_id": resource_object_id,
             "note_count": 0,
             "completions": 0,
             "hits": 0,
@@ -110,18 +117,18 @@ class AggregationService:
 
         mongo = MongoIO.get_instance()
         collection = mongo.get_collection(AggregationService._collection_name())
-        aggregation = collection.find_one({"resource_id": resource_object_id})
+        aggregation = AggregationService._find_aggregation(
+            collection, resource_object_id
+        )
         if aggregation is not None:
             return aggregation
 
         document = AggregationService._new_aggregation_document(
             resource_object_id, breadcrumb
         )
-        aggregation_id = mongo.create_document(
-            AggregationService._collection_name(), document
-        )
+        mongo.create_document(AggregationService._collection_name(), document)
         created = mongo.get_document(
-            AggregationService._collection_name(), aggregation_id
+            AggregationService._collection_name(), str(resource_object_id)
         )
         logger.info(
             f"Created aggregation for resource {resource_id} "
@@ -143,7 +150,9 @@ class AggregationService:
 
             mongo = MongoIO.get_instance()
             collection = mongo.get_collection(AggregationService._collection_name())
-            aggregation = collection.find_one({"resource_id": resource_object_id})
+            aggregation = AggregationService._find_aggregation(
+                collection, resource_object_id
+            )
 
             logger.info(
                 f"Retrieved aggregation for resource {resource_id} "
