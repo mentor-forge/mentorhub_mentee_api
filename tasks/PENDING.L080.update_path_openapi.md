@@ -16,23 +16,28 @@ Always read these files before implementation:
 
 Additional inputs:
 
-- Latest Path dictionary schema from the MongoDB configurator (start with `pipenv run db` if needed):
+- **Definitive Path schema** from the MongoDB configurator API (start with `pipenv run db` if needed; see `tasks/_PLANNING.md` — do not read dictionary files from the `mentorhub_mongodb_api` repo):
 
 ```bash
 curl -X GET "http://localhost:8383/api/configurations/json_schema/Path.yaml/latest/" -H "accept: application/json"
 ```
 
-- Generated JSON schema: `../mentorhub/Specifications/schemas/Path.schema.json` (if present)
-- Path dictionary source: `../mentorhub_mongodb_api/configurator/dictionaries/Path.0.1.0.yaml` — nested `modules` → `topics` → `resources` (array of Resource `_id` identifiers)
+- **Resource schema** (for `PathResourceSummary` field types) from the same configurator API:
+
+```bash
+curl -X GET "http://localhost:8383/api/configurations/json_schema/Resource.yaml/latest/" -H "accept: application/json"
+```
+
 - `src/routes/path_routes.py` — runtime blueprint uses lowercase `/api/path`
 - `tasks/SHIPPED.L010.update_resource_openapi.md` — pattern for list/detail contract changes and lowercase path casing
 - `tasks/SHIPPED.L020.simplify_resource_list_pagination.md` — pattern for replacing infinite-scroll wrapper with a plain array
+- `tasks/_PLANNING.md` — external repository boundaries and configurator schema discovery
 
-**MongoDB I/O rule** (for downstream implementation tasks): services must use `MongoIO` (`get_document`, `get_documents`, etc.) — not direct PyMongo collection calls.
+**External prerequisite**: The MongoDB configurator must serve the current `Path.yaml` and `Resource.yaml` schemas at the URLs above. If the configurator is unavailable, try `pipenv run db`; if the API call still fails, set **Status** to `Blocked` and stop. Do not read dictionary YAML from the `mentorhub_mongodb_api` repository.
 
 ## Goals
 
-- `Path` component schema in `docs/openapi.yaml` reflects the MongoDB Path dictionary, including at minimum: `_id`, `name`, `description`, `technologies`, `interests`, `modules` (with nested `topics` and `resources`), `status`, `created`, `saved`.
+- `Path` component schema in `docs/openapi.yaml` reflects the configurator `Path.yaml` JSON schema (including nested `modules` → `topics` → `resources` where `resources` holds Resource `_id` identifiers in stored documents).
 - New `PathResourceSummary` component schema (or equivalent name) with required `_id` and optional `name`, `description` — minimal Resource projection for Path detail responses.
 - In the Path detail response, each item in `modules[].topics[].resources[]` is documented as `PathResourceSummary` (identifier plus `name` and `description`), not a bare ObjectId string.
 - `GET /api/path` documented as:
@@ -67,7 +72,7 @@ Run all commands from the **API repository root**.
 
 Paths are relative to the **API repository root**.
 
-- `docs/openapi.yaml` — sync `Path` schema with MongoDB dictionary; add `PathResourceSummary`; update `GET /api/path` (plain array, name-sorted, no pagination/scroll params); update `GET /api/path/{path_id}` (enriched resources in nested modules); fix path casing to lowercase `/api/path`.
+- `docs/openapi.yaml` — sync `Path` schema with configurator `Path.yaml` JSON schema; add `PathResourceSummary`; update `GET /api/path` (plain array, name-sorted, no pagination/scroll params); update `GET /api/path/{path_id}` (enriched resources in nested modules); fix path casing to lowercase `/api/path`.
 
 The agent must not update files outside this list.
 

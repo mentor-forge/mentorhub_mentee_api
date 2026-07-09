@@ -18,14 +18,14 @@ Additional inputs:
 
 - `src/services/path_service.py` — `get_path` currently returns raw MongoDB document via `mongo.get_document`
 - `src/services/resource_service.py` — `get_resources` (paginated list) and `get_resource` (single detail composite); add batch-by-ids helper here
-- `../mentorhub_mongodb_api/configurator/dictionaries/Path.0.1.0.yaml` — `modules[].topics[].resources[]` stores Resource `_id` identifiers
+- `docs/openapi.yaml` — Path detail shape and `PathResourceSummary` from L080 (`modules[].topics[].resources[]` enriched in API responses)
 - `../mentorhub_api_utils/api_utils/mongo_utils/mongo_io.py` — `get_documents` with `match={"_id": {"$in": [...]}}` and optional `project`
 - `test/routes/test_path_routes.py`
 - `test/services/test_path_service.py`
 - `test/services/test_resource_service.py` — **new or updated** tests for batch lookup
 - `test/e2e/test_path.py`
 
-**MongoDB I/O rule**: Batch Resource reads must use `MongoIO.get_documents` (e.g. `match={"_id": {"$in": object_ids}}`, `project={"name": 1, "description": 1}`) — not direct `collection.find`.
+**MongoDB I/O rule**: Batch Resource reads must use `MongoIO.get_documents` (e.g. `match={"_id": {"$in": object_ids}}`, `project={"name": 1, "description": 1}`) — not direct `collection.find`. See `tasks/_PLANNING.md` and `SHIPPED.L070.refactor_services_to_mongoio.md`.
 
 **Archived resources**: When enriching Path detail, apply the same visibility rule as `ResourceService.get_resources` — non-admin callers should not receive `archived` resources (omit or redact entries for archived IDs; document chosen behavior in Execution Notes). Admin callers may see archived resource summaries.
 

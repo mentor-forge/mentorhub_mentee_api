@@ -24,9 +24,7 @@ Additional inputs:
 - `test/services/test_path_service.py`
 - `test/e2e/test_path.py`
 
-Pattern reference: L080 OpenAPI documents the target contract (array body, fixed name sort, no pagination). `tasks/SHIPPED.L020.simplify_resource_list_pagination.md` shows the list-endpoint migration pattern.
-
-**MongoDB I/O rule**: Route all MongoDB reads through `MongoIO.get_documents` with `sort_by=[("name", ASCENDING)]`. Do **not** call `mongo.get_collection(...).find(...)` or `execute_infinite_scroll_query` in `path_service.py`.
+Pattern reference: L080 OpenAPI documents the target contract (array body, fixed name sort, no pagination). `tasks/SHIPPED.L020.simplify_resource_list_pagination.md` shows the list-endpoint migration pattern. See `tasks/_PLANNING.md` for allowed external repos and MongoDB schema discovery.
 
 ## Goals
 
@@ -35,6 +33,7 @@ Pattern reference: L080 OpenAPI documents the target contract (array body, fixed
 - MongoDB query uses `MongoIO.get_documents(config.PATH_COLLECTION_NAME, sort_by=[("name", ASCENDING)])` (empty or minimal `match` as appropriate).
 - Remove infinite-scroll and pagination query parameters from the route (`after_id`, `limit`, `sort_by`, `order`); remove optional `name` filter unless L080 documents it (default: no query params).
 - Remove `ALLOWED_SORT_FIELDS` and `execute_infinite_scroll_query` usage from `path_service.py`.
+- Route all MongoDB reads through `MongoIO.get_documents` with `sort_by=[("name", ASCENDING)]` — do **not** call `mongo.get_collection(...).find(...)` or `execute_infinite_scroll_query` (see `tasks/_PLANNING.md` and `SHIPPED.L070.refactor_services_to_mongoio.md`).
 - `PathService._check_permission` for `read` allows any authenticated user (unchanged placeholder behavior).
 - Unit and E2E tests updated for the new response shape and simplified service signature.
 
