@@ -1,6 +1,7 @@
 """
 Unit tests for Path service (consume-style, read-only).
 """
+
 import unittest
 from unittest.mock import patch, MagicMock
 from bson import ObjectId
@@ -50,9 +51,7 @@ class TestPathService(unittest.TestCase):
         mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
 
-        result = PathService.get_paths(
-            self.mock_token, self.mock_breadcrumb, limit=10
-        )
+        result = PathService.get_paths(self.mock_token, self.mock_breadcrumb, limit=10)
 
         self.assertIn("items", result)
         self.assertIn("limit", result)
@@ -65,9 +64,7 @@ class TestPathService(unittest.TestCase):
 
     @patch("src.services.path_service.Config.get_instance")
     @patch("src.services.path_service.MongoIO.get_instance")
-    def test_get_paths_with_name_filter(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_get_paths_with_name_filter(self, mock_get_mongo, mock_get_config):
         """Test retrieval of documents with name filter."""
         mock_config = MagicMock()
         mock_config.PATH_COLLECTION_NAME = "Path"
@@ -110,9 +107,7 @@ class TestPathService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
-            PathService.get_paths(
-                self.mock_token, self.mock_breadcrumb, limit=0
-            )
+            PathService.get_paths(self.mock_token, self.mock_breadcrumb, limit=0)
         self.assertIn("limit must be >= 1", str(context.exception))
 
     @patch("src.services.path_service.Config.get_instance")
@@ -127,9 +122,7 @@ class TestPathService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
-            PathService.get_paths(
-                self.mock_token, self.mock_breadcrumb, limit=101
-            )
+            PathService.get_paths(self.mock_token, self.mock_breadcrumb, limit=101)
         self.assertIn("limit must be <= 100", str(context.exception))
 
     @patch("src.services.path_service.Config.get_instance")
@@ -187,7 +180,9 @@ class TestPathService(unittest.TestCase):
                 self.mock_breadcrumb,
                 after_id="invalid",
             )
-        self.assertIn("after_id must be a valid MongoDB ObjectId", str(context.exception))
+        self.assertIn(
+            "after_id must be a valid MongoDB ObjectId", str(context.exception)
+        )
 
     @patch("src.services.path_service.Config.get_instance")
     @patch("src.services.path_service.MongoIO.get_instance")
@@ -204,9 +199,7 @@ class TestPathService(unittest.TestCase):
         }
         mock_get_mongo.return_value = mock_mongo
 
-        result = PathService.get_path(
-            "123", self.mock_token, self.mock_breadcrumb
-        )
+        result = PathService.get_path("123", self.mock_token, self.mock_breadcrumb)
 
         self.assertIsNotNone(result)
         self.assertEqual(result["_id"], "123")
@@ -225,16 +218,12 @@ class TestPathService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPNotFound) as context:
-            PathService.get_path(
-                "999", self.mock_token, self.mock_breadcrumb
-            )
+            PathService.get_path("999", self.mock_token, self.mock_breadcrumb)
         self.assertIn("999", str(context.exception))
 
     @patch("src.services.path_service.Config.get_instance")
     @patch("src.services.path_service.MongoIO.get_instance")
-    def test_get_paths_handles_exception(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_get_paths_handles_exception(self, mock_get_mongo, mock_get_config):
         """Test get_paths handles exceptions properly."""
         mock_config = MagicMock()
         mock_config.PATH_COLLECTION_NAME = "Path"
@@ -248,15 +237,11 @@ class TestPathService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
-            PathService.get_paths(
-                self.mock_token, self.mock_breadcrumb
-            )
+            PathService.get_paths(self.mock_token, self.mock_breadcrumb)
 
     @patch("src.services.path_service.Config.get_instance")
     @patch("src.services.path_service.MongoIO.get_instance")
-    def test_get_path_handles_exception(
-        self, mock_get_mongo, mock_get_config
-    ):
+    def test_get_path_handles_exception(self, mock_get_mongo, mock_get_config):
         """Test get_path handles exceptions properly."""
         mock_config = MagicMock()
         mock_config.PATH_COLLECTION_NAME = "Path"
@@ -267,9 +252,7 @@ class TestPathService(unittest.TestCase):
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
-            PathService.get_path(
-                "123", self.mock_token, self.mock_breadcrumb
-            )
+            PathService.get_path("123", self.mock_token, self.mock_breadcrumb)
 
     def test_check_permission_placeholder(self):
         """Test that _check_permission is a placeholder that allows all operations."""

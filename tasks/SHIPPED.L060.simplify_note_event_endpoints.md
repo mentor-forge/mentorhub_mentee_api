@@ -1,6 +1,6 @@
 # L060 – Align Note and Event runtime with POST-only contract
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L040  
 **Description**: Remove Event GET routes, prune unused Note read/update service surface, delete orphaned Rating test artifacts, and update tests so runtime behavior matches the L040 OpenAPI contract (Note and Event POST-only).
@@ -93,4 +93,12 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Removed Event GET routes; Event and Note services trimmed to POST/create surface plus internal helpers.
+- Rewrote Note/Event unit and E2E tests for POST-only contract and current MongoDB schemas.
+- Updated `test_server.py` for POST event registration and aggregation blueprint.
+- Removed stale `rating_service.pyc` artifact.
+
+**Testing**
+- `pipenv run test`: 78 passed, 24 skipped, 19 deselected.
+- `pipenv run build`: clean.

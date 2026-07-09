@@ -110,10 +110,9 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertIn(response.status_code, [201, 401, 500])
 
     def test_event_routes_registered(self):
-        """Test that /api/event routes are registered."""
-        response = self.client.get("/api/event")
-        # Should not get 404 (route exists), but may get 401 (auth required)
-        self.assertIn(response.status_code, [200, 401, 500])
+        """Test that /api/event POST route is registered."""
+        response = self.client.post("/api/event")
+        self.assertIn(response.status_code, [201, 401, 500])
 
     def test_resource_routes_registered(self):
         """Test that /api/resource routes are registered."""
@@ -145,6 +144,8 @@ class TestAppConfiguration(unittest.TestCase):
 
         self.assertIn("event_routes", blueprint_names)
 
+        self.assertIn("aggregation_routes", blueprint_names)
+
         self.assertIn("resource_routes", blueprint_names)
 
         self.assertIn("path_routes", blueprint_names)
@@ -166,6 +167,8 @@ class TestAppConfiguration(unittest.TestCase):
         self.assertTrue(any("/api/note" in rule for rule in rules))
 
         self.assertTrue(any("/api/event" in rule for rule in rules))
+
+        self.assertTrue(any("/api/aggregation" in rule for rule in rules))
 
         self.assertTrue(any("/api/resource" in rule for rule in rules))
 
