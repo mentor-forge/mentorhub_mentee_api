@@ -1,6 +1,6 @@
 # L040 – Clean up OpenAPI for Aggregation, Note, and Event
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Update `docs/openapi.yaml` to remove obsolete Rating operations, restrict Note and Event paths to POST-only, and document the new `GET /api/aggregation/{resource_id}` composite endpoint.
@@ -87,4 +87,12 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Removed Rating tag, paths, and schemas from `docs/openapi.yaml`.
+- Replaced Note/Event paths with POST-only lowercase `/api/note` and `/api/event`.
+- Synced Note and Event component schemas to MongoDB dictionary fields.
+- Added `Aggregation` tag, `GET /api/aggregation/{resource_id}`, and `AggregationDetail` schema.
+
+**Testing**
+- Verified no Rating/NoteUpdate/legacy path references remain via grep.
+- `pipenv run lint` reports pre-existing formatting drift in unrelated files (same as L010).
