@@ -47,6 +47,7 @@ Each task file must contain the following sections under H1 and H2 headings.
   - Can include changing existing tests because of modified features.
   - Should always include a description of the tests that should be used to verify completion.
   - In this repo, that typically means some combination of:
+    - `pipenv run install` — refresh dependencies after `Pipfile` / lockfile changes (CodeArtifact auth; run `mh` first if needed)
     - `pipenv run test` — unit tests (pytest, excludes `@pytest.mark.e2e`)
     - `pipenv run lint` — format check (`black --check`)
     - `pipenv run build` — compile Python sources
@@ -83,6 +84,18 @@ Each task file must contain the following sections under H1 and H2 headings.
   - Generated JSON schemas: `../mentorhub/Specifications/schemas/<Collection>.schema.json`
   - MongoDB configurator tasks (external): `../mentorhub_mongodb_api/Tasks/`
   - In-repo: `README.md`, `docs/openapi.yaml`, `src/...`, `test/...`, `tasks/...`
+
+## Dependency management
+
+Domain APIs resolve `api-utils` and other packages from **AWS CodeArtifact**. When a task bumps or adds dependencies in `Pipfile` / `Pipfile.lock`, the execution agent must install them with:
+
+```bash
+pipenv run install
+```
+
+Do **not** use bare `pipenv install` or `pipenv install --dev` in task instructions — those skip the repo’s CodeArtifact auth wrapper (`scripts/pipenv-install.sh`). Run `mh` once per shell session before `pipenv run install` if CodeArtifact credentials are not already available (see `README.md` and `../mentorhub/DeveloperEdition/standards/api_standards.md`).
+
+Task **Testing Expectations** and **Goals** should call out `pipenv run install` whenever `Pipfile` or `Pipfile.lock` changes.
 
 ## Sample task file
 

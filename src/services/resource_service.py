@@ -13,6 +13,8 @@ from api_utils.flask_utils.exceptions import (
 )
 import logging
 
+from pymongo import ASCENDING
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_OFFSET = 0
@@ -82,14 +84,17 @@ class ResourceService:
 
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            collection = mongo.get_collection(config.RESOURCE_COLLECTION_NAME)
 
             query = {}
             if not ResourceService._is_admin(token, config):
                 query["status"] = {"$ne": ARCHIVED_STATUS}
 
-            cursor = collection.find(query).sort("name", 1).skip(offset).limit(size)
-            resources = list(cursor)
+            documents = mongo.get_documents(
+                config.RESOURCE_COLLECTION_NAME,
+                match=query,
+                sort_by=[("name", ASCENDING)],
+            )
+            resources = documents[offset : offset + size]
 
             logger.info(
                 f"Retrieved {len(resources)} resources (offset={offset}, size={size}) "

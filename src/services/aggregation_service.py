@@ -31,13 +31,6 @@ class AggregationService:
     """
 
     @staticmethod
-    def _collection_name():
-        config = Config.get_instance()
-        return getattr(
-            config, "RESOURCE_AGGREGATION_COLLECTION_NAME", "Resource_Aggregation"
-        )
-
-    @staticmethod
     def _resource_object_id(resource_id):
         try:
             return ObjectId(resource_id)
@@ -90,11 +83,15 @@ class AggregationService:
                 raise HTTPForbidden("Mentee role required to record completions")
 
     @staticmethod
-    def _find_aggregation(collection, resource_object_id):
-        aggregation = collection.find_one({"_id": resource_object_id})
+    def _find_aggregation(mongo, collection_name, resource_object_id):
+        aggregation = mongo.get_document(collection_name, str(resource_object_id))
         if aggregation is not None:
             return aggregation
-        return collection.find_one({"resource_id": resource_object_id})
+
+        legacy_matches = mongo.get_documents(
+            collection_name, match={"resource_id": resource_object_id}
+        )
+        return legacy_matches[0] if legacy_matches else None
 
     @staticmethod
     def _new_aggregation_document(resource_object_id, breadcrumb):
@@ -116,9 +113,10 @@ class AggregationService:
         resource_object_id = AggregationService._resource_object_id(resource_id)
 
         mongo = MongoIO.get_instance()
-        collection = mongo.get_collection(AggregationService._collection_name())
+        config = Config.get_instance()
+        collection_name = config.RESOURCE_AGGREGATION_COLLECTION_NAME
         aggregation = AggregationService._find_aggregation(
-            collection, resource_object_id
+            mongo, collection_name, resource_object_id
         )
         if aggregation is not None:
             return aggregation
@@ -126,10 +124,8 @@ class AggregationService:
         document = AggregationService._new_aggregation_document(
             resource_object_id, breadcrumb
         )
-        mongo.create_document(AggregationService._collection_name(), document)
-        created = mongo.get_document(
-            AggregationService._collection_name(), str(resource_object_id)
-        )
+        mongo.create_document(collection_name, document)
+        created = mongo.get_document(collection_name, str(resource_object_id))
         logger.info(
             f"Created aggregation for resource {resource_id} "
             f"for user {token.get('user_id')}"
@@ -149,9 +145,9 @@ class AggregationService:
             resource_object_id = AggregationService._resource_object_id(resource_id)
 
             mongo = MongoIO.get_instance()
-            collection = mongo.get_collection(AggregationService._collection_name())
+            config = Config.get_instance()
             aggregation = AggregationService._find_aggregation(
-                collection, resource_object_id
+                mongo, config.RESOURCE_AGGREGATION_COLLECTION_NAME, resource_object_id
             )
 
             logger.info(
@@ -234,8 +230,9 @@ class AggregationService:
             }
 
             mongo = MongoIO.get_instance()
+            config = Config.get_instance()
             updated = mongo.update_document(
-                AggregationService._collection_name(),
+                config.RESOURCE_AGGREGATION_COLLECTION_NAME,
                 document_id=str(aggregation["_id"]),
                 set_data=set_data,
             )
@@ -274,8 +271,9 @@ class AggregationService:
             }
 
             mongo = MongoIO.get_instance()
+            config = Config.get_instance()
             updated = mongo.update_document(
-                AggregationService._collection_name(),
+                config.RESOURCE_AGGREGATION_COLLECTION_NAME,
                 document_id=str(aggregation["_id"]),
                 set_data=set_data,
             )

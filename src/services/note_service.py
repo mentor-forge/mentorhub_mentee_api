@@ -6,6 +6,7 @@ Handles RBAC checks and MongoDB operations for Note domain.
 
 from api_utils import MongoIO, Config
 from api_utils.mongo_utils import encode_document
+from pymongo import DESCENDING
 from api_utils.flask_utils.exceptions import (
     HTTPBadRequest,
     HTTPForbidden,
@@ -92,11 +93,10 @@ class NoteService:
 
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            collection = mongo.get_collection(config.NOTE_COLLECTION_NAME)
-            notes = list(
-                collection.find({"resource_id": resource_object_id}).sort(
-                    "created.at_time", -1
-                )
+            notes = mongo.get_documents(
+                config.NOTE_COLLECTION_NAME,
+                match={"resource_id": resource_object_id},
+                sort_by=[("created.at_time", DESCENDING)],
             )
 
             logger.info(

@@ -106,13 +106,8 @@ class TestNoteService(unittest.TestCase):
         mock_config.NOTE_COLLECTION_NAME = "Note"
         mock_get_config.return_value = mock_config
 
-        mock_cursor = MagicMock()
-        mock_cursor.sort.return_value = [{"_id": "1", "note": "a"}]
-        mock_collection = MagicMock()
-        mock_collection.find.return_value = mock_cursor
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_documents.return_value = [{"_id": "1", "note": "a"}]
         mock_get_mongo.return_value = mock_mongo
 
         notes = NoteService.get_notes_for_resource(
@@ -120,8 +115,10 @@ class TestNoteService(unittest.TestCase):
         )
 
         self.assertEqual(len(notes), 1)
-        mock_collection.find.assert_called_once_with(
-            {"resource_id": ObjectId(self.resource_id)}
+        mock_mongo.get_documents.assert_called_once()
+        call_kwargs = mock_mongo.get_documents.call_args[1]
+        self.assertEqual(
+            call_kwargs["match"]["resource_id"], ObjectId(self.resource_id)
         )
 
     @patch("src.services.note_service.Config.get_instance")

@@ -36,15 +36,11 @@ class TestAggregationService(unittest.TestCase):
         mock_config.RESOURCE_AGGREGATION_COLLECTION_NAME = "Resource_Aggregation"
         mock_get_config.return_value = mock_config
 
-        mock_collection = MagicMock()
-        mock_collection.find_one.return_value = {
+        mock_mongo = MagicMock()
+        mock_mongo.get_document.return_value = {
             "_id": ObjectId(self.resource_id),
-            "resource_id": ObjectId(self.resource_id),
             "note_count": 3,
         }
-
-        mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
         mock_get_mongo.return_value = mock_mongo
 
         result = AggregationService.get_aggregation_for_resource(
@@ -52,8 +48,8 @@ class TestAggregationService(unittest.TestCase):
         )
 
         self.assertEqual(result["note_count"], 3)
-        mock_collection.find_one.assert_called_once_with(
-            {"_id": ObjectId(self.resource_id)}
+        mock_mongo.get_document.assert_called_once_with(
+            "Resource_Aggregation", self.resource_id
         )
 
     @patch("src.services.aggregation_service.Config.get_instance")
@@ -65,11 +61,9 @@ class TestAggregationService(unittest.TestCase):
         mock_config.RESOURCE_AGGREGATION_COLLECTION_NAME = "Resource_Aggregation"
         mock_get_config.return_value = mock_config
 
-        mock_collection = MagicMock()
-        mock_collection.find_one.return_value = None
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_document.return_value = None
+        mock_mongo.get_documents.return_value = []
         mock_get_mongo.return_value = mock_mongo
 
         result = AggregationService.get_aggregation_for_resource(
@@ -107,14 +101,11 @@ class TestAggregationService(unittest.TestCase):
 
         aggregation_doc = {
             "_id": ObjectId(self.resource_id),
-            "resource_id": ObjectId(self.resource_id),
             "hits": 2,
         }
-        mock_collection = MagicMock()
-        mock_collection.find_one.return_value = aggregation_doc
 
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_document.return_value = aggregation_doc
         mock_get_mongo.return_value = mock_mongo
         mock_get_notes.return_value = [{"_id": "note1", "note": "helpful"}]
 
@@ -145,13 +136,10 @@ class TestAggregationService(unittest.TestCase):
             "rating_sum": 0,
         }
 
-        mock_collection = MagicMock()
-        mock_collection.find_one.return_value = None
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_document.side_effect = [None, created_doc]
+        mock_mongo.get_documents.return_value = []
         mock_mongo.create_document.return_value = self.resource_id
-        mock_mongo.get_document.return_value = created_doc
         mock_get_mongo.return_value = mock_mongo
         mock_get_notes.return_value = []
 
@@ -197,7 +185,6 @@ class TestAggregationService(unittest.TestCase):
 
         aggregation_doc = {
             "_id": ObjectId(self.resource_id),
-            "resource_id": ObjectId(self.resource_id),
             "completions": 1,
             "rating_count": 1,
             "rating_sum": 4,
@@ -213,11 +200,8 @@ class TestAggregationService(unittest.TestCase):
             "duration": "PT1H30M",
         }
 
-        mock_collection = MagicMock()
-        mock_collection.find_one.return_value = aggregation_doc
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_document.return_value = aggregation_doc
         mock_mongo.update_document.return_value = updated_doc
         mock_get_mongo.return_value = mock_mongo
         mock_create_note.return_value = "note-id"
@@ -245,16 +229,12 @@ class TestAggregationService(unittest.TestCase):
 
         aggregation_doc = {
             "_id": ObjectId(self.resource_id),
-            "resource_id": ObjectId(self.resource_id),
             "hits": 3,
         }
         updated_doc = {**aggregation_doc, "hits": 4}
 
-        mock_collection = MagicMock()
-        mock_collection.find_one.return_value = aggregation_doc
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_document.return_value = aggregation_doc
         mock_mongo.update_document.return_value = updated_doc
         mock_get_mongo.return_value = mock_mongo
 
@@ -273,11 +253,8 @@ class TestAggregationService(unittest.TestCase):
         mock_config.RESOURCE_AGGREGATION_COLLECTION_NAME = "Resource_Aggregation"
         mock_get_config.return_value = mock_config
 
-        mock_collection = MagicMock()
-        mock_collection.find_one.side_effect = Exception("Database error")
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_document.side_effect = Exception("Database error")
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
