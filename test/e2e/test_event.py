@@ -1,13 +1,8 @@
 """
-E2E tests for Event endpoints.
+E2E tests for Event endpoints (POST only).
 """
 
 import pytest
-
-pytestmark = pytest.mark.skip(
-    reason="Deferred: Event schema updates pending (future issue)"
-)
-
 import requests
 
 from .e2e_auth import get_auth_token
@@ -23,12 +18,12 @@ def _err(response, expected):
 
 @pytest.mark.e2e
 def test_create_event_endpoint():
-    """Test POST /api/event endpoint and basic retrieval by ID and search."""
+    """Test POST /api/event endpoint."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
     data = {
-        "name": "e2e-test-event",
-        "description": "E2E test event document",
+        "type": "link",
+        "context": {"profile_id": "507f1f77bcf86cd799439011"},
     }
 
     response = requests.post(f"{BASE_URL}/api/event", headers=headers, json=data)
@@ -36,43 +31,12 @@ def test_create_event_endpoint():
 
     response_data = response.json()
     assert "_id" in response_data, "Response missing '_id' key"
-    assert response_data["name"] == "e2e-test-event"
+    assert response_data.get("type") == "link"
     assert "created" in response_data
 
 
 @pytest.mark.e2e
-def test_get_events_endpoint():
-    """Test GET /api/event endpoint."""
-    token = get_auth_token()
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/event", headers=headers)
-    assert response.status_code == 200, _err(response, 200)
-
-    response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert "limit" in response_data, "Response should have 'limit' key"
-    assert "has_more" in response_data, "Response should have 'has_more' key"
-    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
-
-
-@pytest.mark.e2e
-def test_get_event_not_found():
-    """Test GET /api/event/<id> with non-existent ID."""
-    token = get_auth_token()
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(
-        f"{BASE_URL}/api/event/000000000000000000000000",
-        headers=headers,
-    )
-    assert response.status_code == 404, _err(response, 404)
-
-
-@pytest.mark.e2e
-def test_event_endpoints_require_auth():
-    """Test that event endpoints require authentication."""
-    response = requests.get(f"{BASE_URL}/api/event")
+def test_event_endpoint_requires_auth():
+    """Test that event create requires authentication."""
+    response = requests.post(f"{BASE_URL}/api/event", json={"type": "link"})
     assert response.status_code == 401, f"Expected 401, got {response.status_code}"

@@ -10,6 +10,7 @@ To run these tests:
 
 API runs on port 8393 (same for dev and api).
 """
+
 import pytest
 import requests
 
@@ -33,7 +34,9 @@ def test_get_paths_endpoint():
     assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
-    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert isinstance(
+        response_data, dict
+    ), "Response should be a dict (infinite scroll format)"
     assert "items" in response_data, "Response should have 'items' key"
     assert "limit" in response_data, "Response should have 'limit' key"
     assert "has_more" in response_data, "Response should have 'has_more' key"
@@ -50,7 +53,9 @@ def test_get_paths_with_name_filter():
     assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
-    assert isinstance(response_data, dict), "Response should be a dict (infinite scroll format)"
+    assert isinstance(
+        response_data, dict
+    ), "Response should be a dict (infinite scroll format)"
     assert "items" in response_data, "Response should have 'items' key"
     assert isinstance(response_data["items"], list), "Items should be a list"
 

@@ -37,6 +37,7 @@ app.json = MongoJSONEncoder(app)
 from api_utils import create_metric_routes, create_config_routes, create_explorer_routes
 from src.routes.journey_routes import create_journey_routes
 from src.routes.note_routes import create_note_routes
+from src.routes.aggregation_routes import create_aggregation_routes
 from src.routes.event_routes import create_event_routes
 from src.routes.resource_routes import create_resource_routes
 from src.routes.path_routes import create_path_routes
@@ -48,6 +49,7 @@ app.register_blueprint(create_explorer_routes(docs_dir), url_prefix="/docs")
 app.register_blueprint(create_config_routes(), url_prefix="/api/config")
 app.register_blueprint(create_journey_routes(), url_prefix="/api/journey")
 app.register_blueprint(create_note_routes(), url_prefix="/api/note")
+app.register_blueprint(create_aggregation_routes(), url_prefix="/api/aggregation")
 app.register_blueprint(create_event_routes(), url_prefix="/api/event")
 app.register_blueprint(create_resource_routes(), url_prefix="/api/resource")
 app.register_blueprint(create_path_routes(), url_prefix="/api/path")
@@ -57,6 +59,7 @@ logger.info("============= Routes Registered ===============")
 logger.info("  /api/config - Configuration endpoint")
 logger.info("  /api/journey - Journey domain endpoints")
 logger.info("  /api/note - Note domain endpoints (create only)")
+logger.info("  /api/aggregation - Aggregation domain endpoints")
 logger.info("  /api/event - Event domain endpoints")
 logger.info("  /api/resource - Resource domain endpoints")
 logger.info("  /api/path - Path domain endpoints")

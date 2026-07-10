@@ -30,12 +30,12 @@ tags:
     description: Monitoring endpoints
   - name: Journey
     description: Journey operations (create, read, update)
-  - name: Rating
-    description: Rating operations (create, read, update)
   - name: Note
-    description: Note operations (create, read, update)
+    description: Note operations (create only)
   - name: Event
-    description: Event operations (create, read)
+    description: Event operations (create only)
+  - name: Aggregation
+    description: Resource aggregation metrics and related notes (read)
   - name: Resource
     description: Resource operations (read-only)
   - name: Path
@@ -148,7 +148,7 @@ paths:
             example: asc
       responses:
         '200':
-          description: Successfully retrieved controls
+          description: Successfully retrieved Journeys
           content:
             application/json:
               schema:
@@ -162,7 +162,7 @@ paths:
                   items:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Control'
+                      $ref: '#/components/schemas/Journey'
                   limit:
                     type: integer
                     example: 10
@@ -281,284 +281,12 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/Rating:
-    get:
-      tags:
-        - Rating
-      summary: Get all Rating documents
-      description: Retrieve infinite scroll batch of sorted, filtered Rating documents
-      operationId: getRatings
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: name
-          in: query
-          required: false
-          description: Optional name filter (supports partial matches, case-insensitive)
-          schema:
-            type: string
-            example: my-Rating
-        - name: after_id
-          in: query
-          required: false
-          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-        - name: limit
-          in: query
-          required: false
-          description: Items per page (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-            example: 10
-        - name: sort_by
-          in: query
-          required: false
-          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
-          schema:
-            type: string
-            default: name
-            example: name
-        - name: order
-          in: query
-          required: false
-          description: Sort order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: asc
-            example: asc
-      responses:
-        '200':
-          description: Successfully retrieved controls
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - items
-                  - limit
-                  - has_more
-                  - next_cursor
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Control'
-                  limit:
-                    type: integer
-                    example: 10
-                  has_more:
-                    type: boolean
-                    example: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                    pattern: '^[0-9a-fA-F]{24}$'
-                    example: 507f1f77bcf86cd799439011
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    post:
-      tags:
-        - Rating
-      summary: Create a new Rating document
-      description: Create a new Rating document (requires staff or admin role)
-      operationId: createRating
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RatingInput'
-      responses:
-        '201':
-          description: Rating created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                    pattern: '^[0-9a-fA-F]{24}$'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
-  /api/Rating/{RatingId}:
-    get:
-      tags:
-        - Rating
-      summary: Get Rating by RatingId
-      description: Retrieve a specific Rating document by its RatingId
-      operationId: getRating
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: RatingId
-          in: path
-          required: true
-          description: The Rating ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-      responses:
-        '200':
-          description: Successfully retrieved Rating
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Rating'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    patch:
-      tags:
-        - Rating
-      summary: Update Rating document
-      description: Update a Rating document (requires admin role). Cannot update _id, created, or saved fields.
-      operationId: updateRating
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: RatingId
-          in: path
-          required: true
-          description: The Rating ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RatingUpdate'
-      responses:
-        '200':
-          description: Rating updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Rating'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /api/Note:
-    get:
-      tags:
-        - Note
-      summary: Get all Note documents
-      description: Retrieve infinite scroll batch of sorted, filtered Note documents
-      operationId: getNotes
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: name
-          in: query
-          required: false
-          description: Optional name filter (supports partial matches, case-insensitive)
-          schema:
-            type: string
-            example: my-Note
-        - name: after_id
-          in: query
-          required: false
-          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-        - name: limit
-          in: query
-          required: false
-          description: Items per page (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-            example: 10
-        - name: sort_by
-          in: query
-          required: false
-          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
-          schema:
-            type: string
-            default: name
-            example: name
-        - name: order
-          in: query
-          required: false
-          description: Sort order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: asc
-            example: asc
-      responses:
-        '200':
-          description: Successfully retrieved controls
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - items
-                  - limit
-                  - has_more
-                  - next_cursor
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Control'
-                  limit:
-                    type: integer
-                    example: 10
-                  has_more:
-                    type: boolean
-                    example: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                    pattern: '^[0-9a-fA-F]{24}$'
-                    example: 507f1f77bcf86cd799439011
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+  /api/note:
     post:
       tags:
         - Note
       summary: Create a new Note document
-      description: Create a new Note document (requires staff or admin role)
+      description: Create a note about a resource. Requires a valid JWT.
       operationId: createNote
       security:
         - bearerAuth: []
@@ -574,178 +302,18 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                    pattern: '^[0-9a-fA-F]{24}$'
+                $ref: '#/components/schemas/Note'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/Note/{NoteId}:
-    get:
-      tags:
-        - Note
-      summary: Get Note by NoteId
-      description: Retrieve a specific Note document by its NoteId
-      operationId: getNote
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: NoteId
-          in: path
-          required: true
-          description: The Note ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-      responses:
-        '200':
-          description: Successfully retrieved Note
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Note'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-    patch:
-      tags:
-        - Note
-      summary: Update Note document
-      description: Update a Note document (requires admin role). Cannot update _id, created, or saved fields.
-      operationId: updateNote
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: NoteId
-          in: path
-          required: true
-          description: The Note ID (MongoDB ObjectId)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NoteUpdate'
-      responses:
-        '200':
-          description: Note updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Note'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalError'
-  /api/Event:
-    get:
-      tags:
-        - Event
-      summary: Get all Event documents
-      description: Retrieve infinite scroll batch of sorted, filtered Event documents
-      operationId: getEvents
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: name
-          in: query
-          required: false
-          description: Optional name filter (supports partial matches, case-insensitive)
-          schema:
-            type: string
-            example: my-Event
-        - name: after_id
-          in: query
-          required: false
-          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-        - name: limit
-          in: query
-          required: false
-          description: Items per page (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-            example: 10
-        - name: sort_by
-          in: query
-          required: false
-          description: Field to sort by (name, description, created.at_time)
-          schema:
-            type: string
-            default: name
-            example: name
-        - name: order
-          in: query
-          required: false
-          description: Sort order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: asc
-            example: asc
-      responses:
-        '200':
-          description: Successfully retrieved Events
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - items
-                  - limit
-                  - has_more
-                  - next_cursor
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Event'
-                  limit:
-                    type: integer
-                    example: 10
-                  has_more:
-                    type: boolean
-                    example: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                    pattern: '^[0-9a-fA-F]{24}$'
-                    example: 507f1f77bcf86cd799439011
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalError'
+  /api/event:
     post:
       tags:
         - Event
       summary: Create a new Event document
-      description: Create a new Event document (requires staff or admin role)
+      description: Record a meaningful system event. Requires a valid JWT.
       operationId: createEvent
       security:
         - bearerAuth: []
@@ -761,49 +329,47 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                    pattern: '^[0-9a-fA-F]{24}$'
+                $ref: '#/components/schemas/Event'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/Event/{EventId}:
+  /api/aggregation/{resource_id}:
     get:
       tags:
-        - Event
-      summary: Get Event by EventId
-      description: Retrieve a specific Event document by its EventId
-      operationId: getEvent
+        - Aggregation
+      summary: Get Resource aggregation detail by resource ID
+      description: |
+        Retrieve Resource_Aggregation metrics and related Notes for a resource.
+        When no aggregation document exists for the resource, one is created with zeroed counters.
+        Any authenticated token holder may read.
+      operationId: getAggregationDetail
       security:
         - bearerAuth: []
       parameters:
-        - name: EventId
+        - name: resource_id
           in: path
           required: true
-          description: The Event ID (MongoDB ObjectId)
+          description: The Resource ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved Event
+          description: Successfully retrieved aggregation detail
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Event'
+                $ref: '#/components/schemas/AggregationDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+
   /api/resource:
     get:
       tags:
@@ -1178,111 +744,34 @@ components:
           enum:
             - active
             - archived
-    Rating:
-      type: object
-      description: Rating domain document
-      additionalProperties: false
-      required:
-        - _id
-        - name
-        - created
-        - saved
-      properties:
-        _id:
-          type: string
-          description: MongoDB document ID
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439011
-        name:
-          type: string
-          description: Rating name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Rating
-        description:
-          type: string
-          description: Rating description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Rating document
-        status:
-          type: string
-          description: Rating status
-          enum:
-            - active
-            - archived
-          example: active
-        created:
-          $ref: '#/components/schemas/Breadcrumb'
-        saved:
-          $ref: '#/components/schemas/Breadcrumb'
-
-    RatingInput:
-      type: object
-      description: Input for creating a Rating document
-      properties:
-        name:
-          type: string
-          description: Rating name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Rating
-        description:
-          type: string
-          description: Rating description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Rating document
-        status:
-          type: string
-          description: Rating status
-          enum:
-            - active
-            - archived
-          example: active
-
-    RatingUpdate:
-      type: object
-      description: Fields to update in a Rating document (cannot include _id, created, saved)
-      properties:
-        name:
-          type: string
-          description: Rating name
-          pattern: '^[^\s]{1,40}$'
-        description:
-          type: string
-          description: Rating description
-          pattern: '^[^\t\n]{0,255}$'
-        status:
-          type: string
-          description: Rating status
-          enum:
-            - active
-            - archived
     Note:
       type: object
-      description: Note domain document
+      description: A note about a resource
       additionalProperties: false
-      required:
-        - _id
-        - name
-        - created
-        - saved
       properties:
         _id:
           type: string
-          description: MongoDB document ID
+          description: The unique identifier for the Note
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
-        name:
+        resource_id:
           type: string
-          description: Note name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Note
-        description:
+          description: The Resource ID this note is for
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        profile_id:
           type: string
-          description: Note description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Note document
+          description: The Profile ID of the person who took this note
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        note:
+          type: string
+          description: The text of the note
+          maxLength: 4096
+          example: Found this resource very helpful for learning async patterns.
         status:
           type: string
-          description: Note status
+          description: Status of the document
           enum:
             - active
             - archived
@@ -1295,92 +784,99 @@ components:
     NoteInput:
       type: object
       description: Input for creating a Note document
+      additionalProperties: false
       properties:
-        name:
+        resource_id:
           type: string
-          description: Note name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Note
-        description:
+          description: The Resource ID this note is for
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        profile_id:
           type: string
-          description: Note description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Note document
+          description: The Profile ID of the person who took this note
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        note:
+          type: string
+          description: The text of the note
+          maxLength: 4096
+          example: Found this resource very helpful for learning async patterns.
         status:
           type: string
-          description: Note status
+          description: Status of the document
           enum:
             - active
             - archived
           example: active
 
-    NoteUpdate:
-      type: object
-      description: Fields to update in a Note document (cannot include _id, created, saved)
-      properties:
-        name:
-          type: string
-          description: Note name
-          pattern: '^[^\s]{1,40}$'
-        description:
-          type: string
-          description: Note description
-          pattern: '^[^\t\n]{0,255}$'
-        status:
-          type: string
-          description: Note status
-          enum:
-            - active
-            - archived
     Event:
       type: object
-      description: Event domain document
+      description: A meaningful event in the system
       additionalProperties: false
-      required:
-        - _id
-        - name
-        - created
       properties:
         _id:
           type: string
-          description: MongoDB document ID
+          description: The unique identifier for the Event
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
-        name:
+        type:
           type: string
-          description: Event name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Event
-        description:
-          type: string
-          description: Event description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Event document
-        status:
-          type: string
-          description: Event status
-          example: active
+          description: The event type
+          enum:
+            - advanced
+            - arrived
+            - completed
+            - encounter
+            - fail
+            - link
+            - login
+            - logout
+            - note
+            - started
+          example: link
+        context:
+          type: object
+          description: Event context (additional properties allowed)
+          additionalProperties: true
+          properties:
+            profile_id:
+              type: string
+              description: Profile associated with the event
+              pattern: '^[0-9a-fA-F]{24}$'
+              example: 507f1f77bcf86cd799439011
         created:
           $ref: '#/components/schemas/Breadcrumb'
 
     EventInput:
       type: object
-      description: Input for creating a Event document
+      description: Input for creating an Event document
+      additionalProperties: false
       properties:
-        name:
+        type:
           type: string
-          description: Event name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Event
-        description:
-          type: string
-          description: Event description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Event document
-        status:
-          type: string
-          description: Event status
-          example: active
+          description: The event type
+          enum:
+            - advanced
+            - arrived
+            - completed
+            - encounter
+            - fail
+            - link
+            - login
+            - logout
+            - note
+            - started
+          example: link
+        context:
+          type: object
+          description: Event context (additional properties allowed)
+          additionalProperties: true
+          properties:
+            profile_id:
+              type: string
+              description: Profile associated with the event
+              pattern: '^[0-9a-fA-F]{24}$'
+              example: 507f1f77bcf86cd799439011
     Resource:
       type: object
       description: A learning resource (link) (read-only)
@@ -1567,6 +1063,23 @@ components:
           description: Notes related to this resource
           items:
             $ref: '#/components/schemas/Note'
+
+    AggregationDetail:
+      type: object
+      description: Composite aggregation view (metrics + related notes)
+      additionalProperties: false
+      required:
+        - aggregation
+        - notes
+      properties:
+        aggregation:
+          $ref: '#/components/schemas/ResourceAggregation'
+        notes:
+          type: array
+          description: Notes related to this resource
+          items:
+            $ref: '#/components/schemas/Note'
+
     Path:
       type: object
       description: Path domain document (read-only)

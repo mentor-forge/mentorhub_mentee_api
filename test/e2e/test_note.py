@@ -1,13 +1,8 @@
 """
-E2E tests for Note endpoints.
+E2E tests for Note endpoints (POST only).
 """
 
 import pytest
-
-pytestmark = pytest.mark.skip(
-    reason="Deferred: Note schema updates pending (future issue)"
-)
-
 import requests
 
 from .e2e_auth import get_auth_token
@@ -26,9 +21,18 @@ def test_create_note_endpoint():
     """Test POST /api/note endpoint and verify record persists in database."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    if not resources:
+        pytest.skip("No resources available for note create test")
+
+    resource_id = resources[0]["_id"]
     data = {
-        "name": "e2e-test-note",
-        "description": "E2E test note document",
+        "resource_id": resource_id,
+        "note": "E2E test note about this resource",
+        "status": "active",
     }
 
     response = requests.post(f"{BASE_URL}/api/note", headers=headers, json=data)
@@ -36,48 +40,13 @@ def test_create_note_endpoint():
 
     response_data = response.json()
     assert "_id" in response_data, "Response missing '_id' key"
-    assert response_data["name"] == "e2e-test-note"
+    assert response_data.get("note") == data["note"]
     assert "created" in response_data
     assert "saved" in response_data
 
 
 @pytest.mark.e2e
-def test_get_notes_endpoint():
-    """Test GET /api/note endpoint."""
-    token = get_auth_token()
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/note", headers=headers)
-    assert response.status_code == 200, _err(response, 200)
-
-    response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert "limit" in response_data, "Response should have 'limit' key"
-    assert "has_more" in response_data, "Response should have 'has_more' key"
-    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
-
-
-@pytest.mark.e2e
-def test_get_notes_with_name_filter():
-    """Test GET /api/note with name query parameter."""
-    token = get_auth_token()
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/note?name=e2e", headers=headers)
-    assert response.status_code == 200, _err(response, 200)
-
-    response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
-
-
-@pytest.mark.e2e
-def test_note_endpoints_require_auth():
-    """Test that note endpoints require authentication."""
-    response = requests.get(f"{BASE_URL}/api/note")
+def test_note_endpoint_requires_auth():
+    """Test that note create requires authentication."""
+    response = requests.post(f"{BASE_URL}/api/note", json={"note": "test"})
     assert response.status_code == 401, f"Expected 401, got {response.status_code}"

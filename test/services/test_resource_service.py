@@ -40,33 +40,23 @@ class TestResourceService(unittest.TestCase):
         """Test successful retrieval returns a plain array."""
         mock_get_config.return_value = self._mock_config()
 
-        mock_collection = MagicMock()
-        mock_cursor = MagicMock()
-        mock_collection.find.return_value = mock_cursor
-        mock_cursor.sort.return_value = mock_cursor
-        mock_cursor.skip.return_value = mock_cursor
-        mock_cursor.limit.return_value = mock_cursor
-        mock_cursor.__iter__ = lambda self: iter(
-            [
-                {"_id": ObjectId("507f1f77bcf86cd799439011"), "name": "resource1"},
-                {"_id": ObjectId("507f1f77bcf86cd799439012"), "name": "resource2"},
-            ]
-        )
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_documents.return_value = [
+            {"_id": ObjectId("507f1f77bcf86cd799439011"), "name": "resource1"},
+            {"_id": ObjectId("507f1f77bcf86cd799439012"), "name": "resource2"},
+            {"_id": ObjectId("507f1f77bcf86cd799439013"), "name": "resource3"},
+        ]
         mock_get_mongo.return_value = mock_mongo
 
         result = ResourceService.get_resources(
-            self.mock_token, self.mock_breadcrumb, offset=0, size=20
+            self.mock_token, self.mock_breadcrumb, offset=0, size=2
         )
 
         self.assertIsInstance(result, list)
         self.assertEqual(len(result), 2)
-        mock_cursor.skip.assert_called_once_with(0)
-        mock_cursor.limit.assert_called_once_with(20)
-        find_query = mock_collection.find.call_args[0][0]
-        self.assertEqual(find_query["status"], {"$ne": "archived"})
+        mock_mongo.get_documents.assert_called_once()
+        call_kwargs = mock_mongo.get_documents.call_args[1]
+        self.assertEqual(call_kwargs["match"]["status"], {"$ne": "archived"})
 
     @patch("src.services.resource_service.Config.get_instance")
     @patch("src.services.resource_service.MongoIO.get_instance")
@@ -76,24 +66,16 @@ class TestResourceService(unittest.TestCase):
         """Test admin users do not filter out archived resources."""
         mock_get_config.return_value = self._mock_config()
 
-        mock_collection = MagicMock()
-        mock_cursor = MagicMock()
-        mock_collection.find.return_value = mock_cursor
-        mock_cursor.sort.return_value = mock_cursor
-        mock_cursor.skip.return_value = mock_cursor
-        mock_cursor.limit.return_value = mock_cursor
-        mock_cursor.__iter__ = lambda self: iter([])
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_documents.return_value = []
         mock_get_mongo.return_value = mock_mongo
 
         ResourceService.get_resources(
             self.mock_admin_token, self.mock_breadcrumb, offset=0, size=20
         )
 
-        find_query = mock_collection.find.call_args[0][0]
-        self.assertEqual(find_query, {})
+        call_kwargs = mock_mongo.get_documents.call_args[1]
+        self.assertEqual(call_kwargs["match"], {})
 
     @patch("src.services.resource_service.Config.get_instance")
     @patch("src.services.resource_service.MongoIO.get_instance")
@@ -101,7 +83,6 @@ class TestResourceService(unittest.TestCase):
         """Test get_resources raises HTTPBadRequest for offset < 0."""
         mock_get_config.return_value = self._mock_config()
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = MagicMock()
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
@@ -118,7 +99,6 @@ class TestResourceService(unittest.TestCase):
         """Test get_resources raises HTTPBadRequest for size < 1."""
         mock_get_config.return_value = self._mock_config()
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = MagicMock()
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
@@ -135,7 +115,6 @@ class TestResourceService(unittest.TestCase):
         """Test get_resources raises HTTPBadRequest for size > 100."""
         mock_get_config.return_value = self._mock_config()
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = MagicMock()
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPBadRequest) as context:
@@ -206,11 +185,8 @@ class TestResourceService(unittest.TestCase):
         """Test get_resources handles exceptions properly."""
         mock_get_config.return_value = self._mock_config()
 
-        mock_collection = MagicMock()
-        mock_collection.find.side_effect = Exception("Database error")
-
         mock_mongo = MagicMock()
-        mock_mongo.get_collection.return_value = mock_collection
+        mock_mongo.get_documents.side_effect = Exception("Database error")
         mock_get_mongo.return_value = mock_mongo
 
         with self.assertRaises(HTTPInternalServerError):
