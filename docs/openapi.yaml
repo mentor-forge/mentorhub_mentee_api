@@ -422,88 +422,27 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/Path:
+  /api/path:
     get:
       tags:
         - Path
       summary: Get all Path documents
-      description: Retrieve infinite scroll batch of sorted, filtered Path documents (read-only)
+      description: |
+        Retrieve all Path documents (read-only), sorted by `name` ascending.
+
+        Returns a plain JSON array — no pagination or infinite-scroll parameters.
       operationId: getPaths
       security:
         - bearerAuth: []
-      parameters:
-        - name: name
-          in: query
-          required: false
-          description: Optional name filter (supports partial matches, case-insensitive)
-          schema:
-            type: string
-            example: my-Path
-        - name: after_id
-          in: query
-          required: false
-          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-        - name: limit
-          in: query
-          required: false
-          description: Items per page (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-            example: 10
-        - name: sort_by
-          in: query
-          required: false
-          description: Field to sort by (name, description)
-          schema:
-            type: string
-            default: name
-            example: name
-        - name: order
-          in: query
-          required: false
-          description: Sort order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: asc
-            example: asc
       responses:
         '200':
           description: Successfully retrieved Paths
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - items
-                  - limit
-                  - has_more
-                  - next_cursor
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Path'
-                  limit:
-                    type: integer
-                    example: 10
-                  has_more:
-                    type: boolean
-                    example: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                    pattern: '^[0-9a-fA-F]{24}$'
-                    example: 507f1f77bcf86cd799439011
-        '400':
-          $ref: '#/components/responses/BadRequest'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Path'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -541,17 +480,21 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
-  /api/Path/{PathId}:
+  /api/path/{path_id}:
     get:
       tags:
         - Path
-      summary: Get Path by PathId
-      description: Retrieve a specific Path document by its PathId (read-only)
+      summary: Get Path by ID
+      description: |
+        Retrieve a specific Path document by ID (read-only).
+
+        Nested `modules[].topics[].resources[]` entries include minimal Resource
+        data (`_id`, `name`, `description`) in addition to the identifier.
       operationId: getPath
       security:
         - bearerAuth: []
       parameters:
-        - name: PathId
+        - name: path_id
           in: path
           required: true
           description: The Path ID (MongoDB ObjectId)
@@ -565,7 +508,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Path'
+                $ref: '#/components/schemas/PathDetail'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -1082,31 +1025,233 @@ components:
 
     Path:
       type: object
-      description: Path domain document (read-only)
+      description: A learning path through resources (read-only)
       additionalProperties: false
-      required:
-        - _id
-        - name
       properties:
         _id:
           type: string
-          description: MongoDB document ID
+          description: The unique identifier for the Path
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
         name:
           type: string
-          description: Path name
+          description: The searchable name of the Learning Path
           pattern: '^[^\s]{1,40}$'
           example: my-Path
         description:
           type: string
-          description: Path description
+          description: The description of the Path
           pattern: '^[^\t\n]{0,255}$'
           example: A sample Path document
+        technologies:
+          type: array
+          description: Tags to locate learning paths
+          items:
+            type: string
+            enum:
+              - CSS
+              - HTML
+              - Java
+              - MongoDB
+              - Other
+              - Python
+              - React
+              - TypeScript
+        interests:
+          type: array
+          description: Tags to help locate a Path
+          items:
+            type: string
+            enum:
+              - api
+              - data
+              - design
+              - games
+              - iot
+              - robot
+              - sre
+              - ux
+        modules:
+          type: array
+          description: The list of top level Modules for this path
+          items:
+            $ref: '#/components/schemas/PathModule'
         status:
           type: string
-          description: Path status
+          description: Status of the document
+          enum:
+            - active
+            - archived
           example: active
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
+    PathModule:
+      type: object
+      description: A module within a Path
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: The Module Name
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          description: A brief description of the Module
+          pattern: '^[^\t\n]{0,255}$'
+        topics:
+          type: array
+          description: A list of Topics in this Module
+          items:
+            $ref: '#/components/schemas/PathTopic'
+
+    PathTopic:
+      type: object
+      description: A topic within a Path module (stored document shape)
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: The name of the topic
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          description: A brief description of the topic
+          pattern: '^[^\t\n]{0,255}$'
+        resources:
+          type: array
+          description: Resource _id values for this Topic (as stored in MongoDB)
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+
+    PathResourceSummary:
+      type: object
+      description: Minimal Resource projection for Path detail responses
+      additionalProperties: false
+      required:
+        - _id
+      properties:
+        _id:
+          type: string
+          description: The unique identifier for the Resource
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: The searchable name of the Resource
+          pattern: '^[^\s]{1,40}$'
+          example: my-Resource
+        description:
+          type: string
+          description: The description of the Resource
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample Resource document
+
+    PathTopicDetail:
+      type: object
+      description: A topic within a Path module with enriched Resource summaries
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: The name of the topic
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          description: A brief description of the topic
+          pattern: '^[^\t\n]{0,255}$'
+        resources:
+          type: array
+          description: Resources for this Topic with minimal Resource data
+          items:
+            $ref: '#/components/schemas/PathResourceSummary'
+
+    PathModuleDetail:
+      type: object
+      description: A module within a Path with enriched topic resources
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: The Module Name
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          description: A brief description of the Module
+          pattern: '^[^\t\n]{0,255}$'
+        topics:
+          type: array
+          description: A list of Topics in this Module
+          items:
+            $ref: '#/components/schemas/PathTopicDetail'
+
+    PathDetail:
+      type: object
+      description: Path document with enriched Resource summaries in nested topics
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+          description: The unique identifier for the Path
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: The searchable name of the Learning Path
+          pattern: '^[^\s]{1,40}$'
+          example: my-Path
+        description:
+          type: string
+          description: The description of the Path
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample Path document
+        technologies:
+          type: array
+          description: Tags to locate learning paths
+          items:
+            type: string
+            enum:
+              - CSS
+              - HTML
+              - Java
+              - MongoDB
+              - Other
+              - Python
+              - React
+              - TypeScript
+        interests:
+          type: array
+          description: Tags to help locate a Path
+          items:
+            type: string
+            enum:
+              - api
+              - data
+              - design
+              - games
+              - iot
+              - robot
+              - sre
+              - ux
+        modules:
+          type: array
+          description: The list of top level Modules for this path
+          items:
+            $ref: '#/components/schemas/PathModuleDetail'
+        status:
+          type: string
+          description: Status of the document
+          enum:
+            - active
+            - archived
+          example: active
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
     InfiniteScrollResponse:
       type: object
       description: Infinite scroll pagination response
