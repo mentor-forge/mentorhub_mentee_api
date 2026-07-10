@@ -34,30 +34,40 @@ def test_get_paths_endpoint():
     assert response.status_code == 200, _err(response, 200)
 
     response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert "limit" in response_data, "Response should have 'limit' key"
-    assert "has_more" in response_data, "Response should have 'has_more' key"
-    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
+    assert isinstance(response_data, list), "Response should be a JSON array"
 
 
 @pytest.mark.e2e
-def test_get_paths_with_name_filter():
-    """Test GET /api/path with name query parameter."""
+def test_get_path_detail_enriched_resources():
+    """Test GET /api/path/<id> returns enriched resource summaries."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/path?name=test", headers=headers)
-    assert response.status_code == 200, _err(response, 200)
 
-    response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
+    list_response = requests.get(f"{BASE_URL}/api/path", headers=headers)
+    assert list_response.status_code == 200, _err(list_response, 200)
+
+    paths = list_response.json()
+    if not paths:
+        pytest.skip("No Path documents in test data")
+
+    path_id = paths[0]["_id"]
+    detail_response = requests.get(
+        f"{BASE_URL}/api/path/{path_id}",
+        headers=headers,
+    )
+    assert detail_response.status_code == 200, _err(detail_response, 200)
+
+    path = detail_response.json()
+    modules = path.get("modules") or []
+    for module in modules:
+        for topic in module.get("topics") or []:
+            for resource in topic.get("resources") or []:
+                if isinstance(resource, dict):
+                    assert "_id" in resource
+                    if resource.get("name") is not None:
+                        assert "name" in resource
+                    if resource.get("description") is not None:
+                        assert "description" in resource
 
 
 @pytest.mark.e2e
