@@ -1,7 +1,14 @@
 # API Task Automation Framework - Planning
 
-This folder contains coding tasks that an orchestration agent can execute, based on the context and instructions in each task file. This file is a guide for an agent that is helping to plan changes by creating task files to achieve a goal. Create tasks following the [naming conventions](#naming-conventions) and guides below. Before creating any task files you should review the following files for context:
+This folder contains coding tasks that an orchestration agent can execute, based on the context and instructions in each task file. This file is a guide for an agent that is helping to plan changes by creating task files to achieve a goal. Create tasks following the [naming conventions](#naming-conventions) and guides below. 
 
+- **Path anchoring**
+  - All paths in task files are relative to **this API repository root** (the directory that contains `Pipfile`).
+  - Sibling repos must all be sibling folders under a common parent.
+  - Standards: `../mentorhub/DeveloperEdition/standards/api_standards.md`
+  - In-repo: `README.md`, `docs/openapi.yaml`, `src/...`, `test/...`, `tasks/...`
+
+- **Context** Before creating any task files you should review the following files for context:
 - ../mentorhub/DeveloperEdition/standards/api_standards.md
 - ../mentorhub_api_utils/README.md
 - ./README.md
@@ -76,12 +83,6 @@ Each task file must contain the following sections under H1 and H2 headings.
     - `PENDING.L010.update_profile_openapi.md`
     - `RUNNING.L020.add_profile_field_tests.md`
     - `SHIPPED.L010.update_profile_openapi.md`
-
-- **Path anchoring**
-  - All paths in task files are relative to **this API repository root** (the directory that contains `Pipfile`).
-  - Sibling repos must all be sibling folders under a common parent.
-  - Standards: `../mentorhub/DeveloperEdition/standards/api_standards.md`
-  - In-repo: `README.md`, `docs/openapi.yaml`, `src/...`, `test/...`, `tasks/...`
 
 ## External repository boundaries
 
