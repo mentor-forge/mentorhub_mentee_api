@@ -39,68 +39,20 @@ class TestPathRoutes(unittest.TestCase):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
-        mock_get_paths.return_value = {
-            "items": [
-                {"_id": "123", "name": "path1"},
-                {"_id": "456", "name": "path2"},
-            ],
-            "limit": 10,
-            "has_more": False,
-            "next_cursor": None,
-        }
+        mock_get_paths.return_value = [
+            {"_id": "123", "name": "path1"},
+            {"_id": "456", "name": "path2"},
+        ]
 
         response = self.client.get("/api/path")
 
         self.assertEqual(response.status_code, 200)
         data = response.json
-        self.assertIsInstance(data, dict)
-        self.assertIn("items", data)
-        self.assertEqual(len(data["items"]), 2)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 2)
         mock_get_paths.assert_called_once_with(
             self.mock_token,
             self.mock_breadcrumb,
-            name=None,
-            after_id=None,
-            limit=10,
-            sort_by="name",
-            order="asc",
-        )
-
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_paths")
-    def test_get_paths_with_name_filter(
-        self,
-        mock_get_paths,
-        mock_create_breadcrumb,
-        mock_create_token,
-    ):
-        """Test GET /api/path with name query parameter."""
-        mock_create_token.return_value = self.mock_token
-        mock_create_breadcrumb.return_value = self.mock_breadcrumb
-
-        mock_get_paths.return_value = {
-            "items": [{"_id": "123", "name": "test-path"}],
-            "limit": 10,
-            "has_more": False,
-            "next_cursor": None,
-        }
-
-        response = self.client.get("/api/path?name=test")
-
-        self.assertEqual(response.status_code, 200)
-        data = response.json
-        self.assertIsInstance(data, dict)
-        self.assertIn("items", data)
-        self.assertEqual(len(data["items"]), 1)
-        mock_get_paths.assert_called_once_with(
-            self.mock_token,
-            self.mock_breadcrumb,
-            name="test",
-            after_id=None,
-            limit=10,
-            sort_by="name",
-            order="asc",
         )
 
     @patch("src.routes.path_routes.create_flask_token")
@@ -119,6 +71,23 @@ class TestPathRoutes(unittest.TestCase):
         mock_get_path.return_value = {
             "_id": "123",
             "name": "path1",
+            "modules": [
+                {
+                    "name": "module1",
+                    "topics": [
+                        {
+                            "name": "topic1",
+                            "resources": [
+                                {
+                                    "_id": "507f1f77bcf86cd799439011",
+                                    "name": "resource1",
+                                    "description": "desc",
+                                }
+                            ],
+                        }
+                    ],
+                }
+            ],
         }
 
         response = self.client.get("/api/path/123")
@@ -126,6 +95,9 @@ class TestPathRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json
         self.assertEqual(data["_id"], "123")
+        resource = data["modules"][0]["topics"][0]["resources"][0]
+        self.assertEqual(resource["name"], "resource1")
+        self.assertEqual(resource["description"], "desc")
         mock_get_path.assert_called_once_with(
             "123", self.mock_token, self.mock_breadcrumb
         )

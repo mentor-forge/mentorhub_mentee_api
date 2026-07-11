@@ -13,6 +13,7 @@ from api_utils.flask_utils.exceptions import (
 )
 import logging
 
+from bson import ObjectId
 from pymongo import ASCENDING
 
 logger = logging.getLogger(__name__)
@@ -106,6 +107,77 @@ class ResourceService:
         except Exception as e:
             logger.error(f"Error retrieving resources: {str(e)}")
             raise HTTPInternalServerError("Failed to retrieve resources")
+
+    @staticmethod
+    def _to_resource_summary(resource):
+        return {
+            "_id": str(resource["_id"]),
+            "name": resource.get("name"),
+            "description": resource.get("description"),
+        }
+
+    @staticmethod
+    def get_resources_by_ids(resource_ids, token, breadcrumb):
+        """
+        Get minimal Resource summaries for a list of Resource IDs.
+
+        Args:
+            resource_ids: Resource ID strings to look up
+            token: Authentication token
+            breadcrumb: Audit breadcrumb
+
+        Returns:
+            list: Minimal resource dicts with _id, name, and description
+        """
+        try:
+            ResourceService._check_permission(token, "read")
+
+            unique_ids = []
+            seen = set()
+            for resource_id in resource_ids or []:
+                resource_key = str(resource_id)
+                if resource_key not in seen:
+                    seen.add(resource_key)
+                    unique_ids.append(resource_key)
+
+            if not unique_ids:
+                return []
+
+            object_ids = []
+            for resource_id in unique_ids:
+                try:
+                    object_ids.append(ObjectId(resource_id))
+                except Exception:
+                    continue
+
+            if not object_ids:
+                return []
+
+            mongo = MongoIO.get_instance()
+            config = Config.get_instance()
+
+            query = {"_id": {"$in": object_ids}}
+            if not ResourceService._is_admin(token, config):
+                query["status"] = {"$ne": ARCHIVED_STATUS}
+
+            documents = mongo.get_documents(
+                config.RESOURCE_COLLECTION_NAME,
+                match=query,
+                project={"name": 1, "description": 1},
+            )
+
+            summaries = [
+                ResourceService._to_resource_summary(resource) for resource in documents
+            ]
+
+            logger.info(
+                f"Retrieved {len(summaries)} resource summaries "
+                f"for user {token.get('user_id')}"
+            )
+            return summaries
+        except Exception as e:
+            logger.error(f"Error retrieving resources by ids: {str(e)}")
+            raise HTTPInternalServerError("Failed to retrieve resources by ids")
 
     @staticmethod
     def get_resource(resource_id, token, breadcrumb):

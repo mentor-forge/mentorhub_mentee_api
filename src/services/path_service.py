@@ -6,18 +6,15 @@ Handles RBAC checks and MongoDB operations for Path domain.
 
 from api_utils import MongoIO, Config
 from api_utils.flask_utils.exceptions import (
-    HTTPBadRequest,
     HTTPForbidden,
     HTTPNotFound,
     HTTPInternalServerError,
 )
-from api_utils.mongo_utils import execute_infinite_scroll_query
 import logging
 
-logger = logging.getLogger(__name__)
+from pymongo import ASCENDING
 
-# Allowed sort fields for Path domain
-ALLOWED_SORT_FIELDS = ["name", "description"]
+logger = logging.getLogger(__name__)
 
 
 class PathService:
@@ -44,71 +41,66 @@ class PathService:
 
         Note: This is a placeholder for future RBAC implementation.
         For now, all operations require a valid token (authentication only).
-
-        Example RBAC implementation:
-            if operation == 'read':
-                # Read requires any authenticated user (no additional check needed)
-                # For stricter requirements, you could require specific roles:
-                # if not any(role in token.get('roles', []) for role in ['staff', 'admin', 'viewer']):
-                #     raise HTTPForbidden("Insufficient permissions to read path documents")
-                pass
         """
         pass
 
     @staticmethod
-    def get_paths(
-        token,
-        breadcrumb,
-        name=None,
-        after_id=None,
-        limit=10,
-        sort_by="name",
-        order="asc",
-    ):
+    def _collect_resource_ids(path):
+        resource_ids = []
+        seen = set()
+        for module in path.get("modules") or []:
+            for topic in module.get("topics") or []:
+                for resource_id in topic.get("resources") or []:
+                    resource_key = str(resource_id)
+                    if resource_key not in seen:
+                        seen.add(resource_key)
+                        resource_ids.append(resource_key)
+        return resource_ids
+
+    @staticmethod
+    def _enrich_path_resources(path, resource_summaries):
+        summary_by_id = {str(summary["_id"]): summary for summary in resource_summaries}
+        enriched = dict(path)
+        modules = []
+        for module in path.get("modules") or []:
+            enriched_module = dict(module)
+            topics = []
+            for topic in module.get("topics") or []:
+                enriched_topic = dict(topic)
+                enriched_resources = []
+                for resource_id in topic.get("resources") or []:
+                    summary = summary_by_id.get(str(resource_id))
+                    if summary is not None:
+                        enriched_resources.append(summary)
+                enriched_topic["resources"] = enriched_resources
+                topics.append(enriched_topic)
+            enriched_module["topics"] = topics
+            modules.append(enriched_module)
+        enriched["modules"] = modules
+        return enriched
+
+    @staticmethod
+    def get_paths(token, breadcrumb):
         """
-        Get infinite scroll batch of sorted, filtered path documents.
+        Get all path documents sorted by name ascending.
 
         Args:
             token: Authentication token
             breadcrumb: Audit breadcrumb
-            name: Optional name filter (simple search)
-            after_id: Cursor (ID of last item from previous batch, None for first request)
-            limit: Items per batch
-            sort_by: Field to sort by
-            order: Sort order ('asc' or 'desc')
 
         Returns:
-            dict: {
-                'items': [...],
-                'limit': int,
-                'has_more': bool,
-                'next_cursor': str|None  # ID of last item, or None if no more
-            }
-
-        Raises:
-            HTTPBadRequest: If invalid parameters provided
+            list: Path documents sorted by name
         """
         try:
             PathService._check_permission(token, "read")
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
-            collection = mongo.get_collection(config.PATH_COLLECTION_NAME)
-            result = execute_infinite_scroll_query(
-                collection,
-                name=name,
-                after_id=after_id,
-                limit=limit,
-                sort_by=sort_by,
-                order=order,
-                allowed_sort_fields=ALLOWED_SORT_FIELDS,
+            paths = mongo.get_documents(
+                config.PATH_COLLECTION_NAME,
+                sort_by=[("name", ASCENDING)],
             )
-            logger.info(
-                f"Retrieved {len(result['items'])} paths (has_more={result['has_more']}) "
-                f"for user {token.get('user_id')}"
-            )
-            return result
-        except HTTPBadRequest:
-            raise
+            logger.info(f"Retrieved {len(paths)} paths for user {token.get('user_id')}")
+            return paths
         except Exception as e:
             logger.error(f"Error retrieving paths: {str(e)}")
             raise HTTPInternalServerError("Failed to retrieve paths")
@@ -116,7 +108,7 @@ class PathService:
     @staticmethod
     def get_path(path_id, token, breadcrumb):
         """
-        Retrieve a specific path document by ID.
+        Retrieve a specific path document by ID with enriched resource summaries.
 
         Args:
             path_id: The path ID to retrieve
@@ -124,7 +116,7 @@ class PathService:
             breadcrumb: Breadcrumb dictionary for logging
 
         Returns:
-            dict: The path document
+            dict: The path document with enriched nested resources
 
         Raises:
             HTTPNotFound: If path is not found
@@ -138,8 +130,16 @@ class PathService:
             if path is None:
                 raise HTTPNotFound(f"Path { path_id} not found")
 
+            from src.services.resource_service import ResourceService
+
+            resource_ids = PathService._collect_resource_ids(path)
+            resource_summaries = ResourceService.get_resources_by_ids(
+                resource_ids, token, breadcrumb
+            )
+            enriched_path = PathService._enrich_path_resources(path, resource_summaries)
+
             logger.info(f"Retrieved path { path_id} for user {token.get('user_id')}")
-            return path
+            return enriched_path
         except HTTPNotFound:
             raise
         except Exception as e:

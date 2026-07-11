@@ -79,11 +79,32 @@ Each task file must contain the following sections under H1 and H2 headings.
 
 - **Path anchoring**
   - All paths in task files are relative to **this API repository root** (the directory that contains `Pipfile`).
-  - Sibling repos (mentorhub umbrella, other APIs, SPAs) must all be sibling folders under a common parent.
+  - Sibling repos must all be sibling folders under a common parent.
   - Standards: `../mentorhub/DeveloperEdition/standards/api_standards.md`
-  - Generated JSON schemas: `../mentorhub/Specifications/schemas/<Collection>.schema.json`
-  - MongoDB configurator tasks (external): `../mentorhub_mongodb_api/Tasks/`
   - In-repo: `README.md`, `docs/openapi.yaml`, `src/...`, `test/...`, `tasks/...`
+
+## External repository boundaries
+
+Task planning and execution in **this API repo** (`mentorhub_mentee_api`) must not read or depend on other sibling repositories for input context, except:
+
+- **`../mentorhub`** — platform standards and shared documentation (e.g. `DeveloperEdition/standards/api_standards.md`).
+- **`../mentorhub_api_utils`** — shared Python utilities used by domain APIs (e.g. `MongoIO`, Flask helpers, `README.md`).
+
+Do **not** reference paths under `mentorhub_mongodb_api`, other domain API repos, SPAs, or CloudFormation repos in task **Context** or **Goals**. If work in another repository is a prerequisite, describe it as an **external prerequisite** in prose (e.g. “MongoDB dictionary must include field X”) and set **Status** to `Blocked` until a human confirms it — do not link to or read files in that repo.
+
+## MongoDB dictionary schemas
+
+**Definitive** MongoDB collection/dictionary schema information must come from the **running MongoDB configurator service** (`mentorhub_mongodb_api`), not from files in the `mentorhub_mongodb_api` repository.
+
+Start the backing database if needed (`pipenv run db`), then fetch the latest JSON schema with `curl`:
+
+```bash
+curl -X GET "http://localhost:8383/api/configurations/json_schema/<Dictionary>.yaml/latest/" -H "accept: application/json"
+```
+
+Replace `<Dictionary>` with the collection name (e.g. `Path`, `Resource`, `Note`). Use this response as the source of truth when updating `docs/openapi.yaml` component schemas or when implementing service projections. Do **not** use deprecated paths under `../mentorhub/Specifications/schemas/`.
+
+If the configurator is unavailable, set the task **Status** to `Blocked` and stop — do not fall back to dictionary YAML files in the `mentorhub_mongodb_api` repo.
 
 ## Dependency management
 

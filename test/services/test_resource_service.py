@@ -123,6 +123,81 @@ class TestResourceService(unittest.TestCase):
             )
         self.assertIn("size must be <= 100", str(context.exception))
 
+    @patch("src.services.resource_service.Config.get_instance")
+    @patch("src.services.resource_service.MongoIO.get_instance")
+    def test_get_resources_by_ids_returns_summaries(
+        self, mock_get_mongo, mock_get_config
+    ):
+        """Test batch lookup returns minimal resource summaries."""
+        mock_get_config.return_value = self._mock_config()
+
+        mock_mongo = MagicMock()
+        mock_mongo.get_documents.return_value = [
+            {
+                "_id": ObjectId("507f1f77bcf86cd799439011"),
+                "name": "resource1",
+                "description": "desc1",
+            }
+        ]
+        mock_get_mongo.return_value = mock_mongo
+
+        result = ResourceService.get_resources_by_ids(
+            [
+                "507f1f77bcf86cd799439011",
+                "507f1f77bcf86cd799439011",
+            ],
+            self.mock_token,
+            self.mock_breadcrumb,
+        )
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["_id"], "507f1f77bcf86cd799439011")
+        self.assertEqual(result[0]["name"], "resource1")
+        self.assertEqual(result[0]["description"], "desc1")
+        call_kwargs = mock_mongo.get_documents.call_args[1]
+        self.assertEqual(call_kwargs["match"]["status"], {"$ne": "archived"})
+        self.assertEqual(call_kwargs["project"], {"name": 1, "description": 1})
+
+    @patch("src.services.resource_service.Config.get_instance")
+    @patch("src.services.resource_service.MongoIO.get_instance")
+    def test_get_resources_by_ids_empty_list(self, mock_get_mongo, mock_get_config):
+        """Test batch lookup returns empty list for no IDs."""
+        mock_get_config.return_value = self._mock_config()
+        mock_get_mongo.return_value = MagicMock()
+
+        result = ResourceService.get_resources_by_ids(
+            [], self.mock_token, self.mock_breadcrumb
+        )
+
+        self.assertEqual(result, [])
+        mock_get_mongo.return_value.get_documents.assert_not_called()
+
+    @patch("src.services.resource_service.Config.get_instance")
+    @patch("src.services.resource_service.MongoIO.get_instance")
+    def test_get_resources_by_ids_admin_includes_archived(
+        self, mock_get_mongo, mock_get_config
+    ):
+        """Test admin users do not filter archived resources in batch lookup."""
+        mock_get_config.return_value = self._mock_config()
+
+        mock_mongo = MagicMock()
+        mock_mongo.get_documents.return_value = []
+        mock_get_mongo.return_value = mock_mongo
+
+        ResourceService.get_resources_by_ids(
+            ["507f1f77bcf86cd799439011"],
+            self.mock_admin_token,
+            self.mock_breadcrumb,
+        )
+
+        call_kwargs = mock_mongo.get_documents.call_args[1]
+        self.assertEqual(
+            call_kwargs["match"],
+            {
+                "_id": {"$in": [ObjectId("507f1f77bcf86cd799439011")]},
+            },
+        )
+
     @patch("src.services.note_service.NoteService.get_notes_for_resource")
     @patch(
         "src.services.aggregation_service.AggregationService.get_aggregation_for_resource"
