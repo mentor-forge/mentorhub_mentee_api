@@ -38,8 +38,7 @@ def create_event_routes():
         breadcrumb = create_flask_breadcrumb(token)
 
         data = request.get_json() or {}
-        event_id = EventService.create_event(data, token, breadcrumb)
-        event = EventService.get_event(event_id, token, breadcrumb)
+        event = EventService.create_event(data, token, breadcrumb)
 
         logger.info(
             f"create_event Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"

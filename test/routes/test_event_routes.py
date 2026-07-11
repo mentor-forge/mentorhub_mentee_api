@@ -28,10 +28,8 @@ class TestEventRoutes(unittest.TestCase):
     @patch("src.routes.event_routes.create_flask_token")
     @patch("src.routes.event_routes.create_flask_breadcrumb")
     @patch("src.routes.event_routes.EventService.create_event")
-    @patch("src.routes.event_routes.EventService.get_event")
     def test_create_event_success(
         self,
-        mock_get_event,
         mock_create_event,
         mock_create_breadcrumb,
         mock_create_token,
@@ -39,8 +37,7 @@ class TestEventRoutes(unittest.TestCase):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
-        mock_create_event.return_value = "123"
-        mock_get_event.return_value = {
+        mock_create_event.return_value = {
             "_id": "123",
             "type": "link",
             "created": self.mock_breadcrumb,
@@ -48,19 +45,13 @@ class TestEventRoutes(unittest.TestCase):
 
         response = self.client.post(
             "/api/event",
-            json={
-                "type": "link",
-                "context": {"profile_id": "507f1f77bcf86cd799439011"},
-            },
+            json={"type": "link"},
         )
 
         self.assertEqual(response.status_code, 201)
         data = response.json
         self.assertEqual(data["_id"], "123")
         mock_create_event.assert_called_once()
-        mock_get_event.assert_called_once_with(
-            "123", self.mock_token, self.mock_breadcrumb
-        )
 
     @patch("src.routes.event_routes.create_flask_token")
     def test_create_event_unauthorized(self, mock_create_token):

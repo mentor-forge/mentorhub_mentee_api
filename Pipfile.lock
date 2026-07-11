@@ -18,11 +18,11 @@
     "default": {
         "api-utils": {
             "hashes": [
-                "sha256:fd2f548ff0c08ba4f5df397fe86bd1f08e3a3bf9161c115670e168358a6a6a43"
+                "sha256:5127b155ba746d6471bdb9c7cbf43e0421e53a901660f7a2a9c884a0f47a582b"
             ],
             "index": "codeartifact",
             "markers": "python_version >= '3.12'",
-            "version": "==0.2.4"
+            "version": "==0.3.0"
         },
         "blinker": {
             "hashes": [

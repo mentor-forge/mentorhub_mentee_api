@@ -28,18 +28,15 @@ class TestNoteRoutes(unittest.TestCase):
     @patch("src.routes.note_routes.create_flask_token")
     @patch("src.routes.note_routes.create_flask_breadcrumb")
     @patch("src.routes.note_routes.NoteService.create_note")
-    @patch("src.routes.note_routes.NoteService.get_note")
     def test_create_note_success(
         self,
-        mock_get_note,
         mock_create_note,
         mock_create_breadcrumb,
         mock_create_token,
     ):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
-        mock_create_note.return_value = "123"
-        mock_get_note.return_value = {
+        mock_create_note.return_value = {
             "_id": "123",
             "resource_id": "507f1f77bcf86cd799439011",
             "note": "A note",

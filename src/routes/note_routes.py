@@ -38,8 +38,7 @@ def create_note_routes():
         breadcrumb = create_flask_breadcrumb(token)
 
         data = request.get_json() or {}
-        note_id = NoteService.create_note(data, token, breadcrumb)
-        note = NoteService.get_note(note_id, token, breadcrumb)
+        note = NoteService.create_note(data, token, breadcrumb)
 
         logger.info(
             f"create_note Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
