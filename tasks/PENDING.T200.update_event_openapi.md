@@ -1,9 +1,9 @@
-# T200 – Update OpenAPI for Event list and POST schema
+# T200 – Update OpenAPI for POST Event schema
 
 **Status**: Pending  
 **Type**: Feature  
 **Depends On**: none  
-**Description**: Fetch the latest `Event` JSON schema from the MongoDB configurator and update `docs/openapi.yaml`: add `GET /api/event` with offset/size request-header pagination returning a plain array; sync `Event` and `EventInput` component schemas to the current MongoDB dictionary (including `context` identifier fields used in test data).
+**Description**: Fetch the latest `Event` JSON schema from the MongoDB configurator and update `docs/openapi.yaml`: sync `Event` and `EventInput` component schemas to the current MongoDB dictionary. The mentee API remains **POST-only** for events — do not add `GET /api/event`. Event `context` is **server-populated from the JWT token** (all token properties); clients send only `type`.
 
 ## Context
 
@@ -14,9 +14,8 @@ Always read these files before implementation:
 - `README.md`
 - `docs/openapi.yaml` — current POST-only Event contract from L040/L060
 - `tasks/SHIPPED.L040.cleanup_openapi_aggregation_note_event.md` — prior Event OpenAPI cleanup
-- `tasks/SHIPPED.L060.simplify_note_event_endpoints.md` — runtime is POST-only today; this task restores list read in the contract
-- `tasks/SHIPPED.L010.update_resource_openapi.md` — offset/size header pagination pattern reference
-- `tasks/SHIPPED.L020.simplify_resource_list_pagination.md` — list implementation pattern reference
+- `tasks/SHIPPED.L060.simplify_note_event_endpoints.md` — runtime and contract are POST-only; mentee UI posts events only (no list/read)
+- `../mentorhub_api_utils/api_utils/flask_utils/token.py` — `create_flask_token` / `Token.to_dict()`; token shape may evolve
 
 Additional inputs:
 
@@ -35,34 +34,34 @@ curl -X GET "http://localhost:8383/api/configurations/json_schema/Event.yaml/lat
 
 - **`Event` component schema** in `docs/openapi.yaml` matches the latest configurator JSON schema:
   - `type` enum values aligned with `event_types` enumerator.
-  - `context` object with `additionalProperties: true` and documented identifier properties from the dictionary and realistic test-data usage (`profile_id`, `resource_id`, `journey_id` as optional `$ref` or inline identifier patterns).
+  - `context` object with `additionalProperties: true` and documented identifier properties from the dictionary and token usage (`profile_id`, `resource_id`, `journey_id`, `user_id`, `customer_id`, `mentor_id`, etc. as optional properties).
   - `created` breadcrumb schema unchanged.
+  - Document in `context` description that values are populated server-side from the authenticated JWT token (see T202); not supplied by the client.
 - **`EventInput` component schema** matches the create payload shape:
-  - Required: `type`.
-  - Optional: `context` (same shape as `Event.context`; client may supply `profile_id`, `resource_id`, `journey_id`, etc.).
+  - Required: `type` only.
+  - **No `context` property** on input — context is derived from the token at create time so future token claim changes do not require API contract or client changes.
   - No `created` or `_id` on input (system-managed).
-- **`GET /api/event`** documented as:
-  - Returns `200` with a **JSON array** of `Event` objects (no infinite-scroll wrapper such as `items` / `has_more` / `next_cursor`).
-  - Request **header** parameters: `offset` (integer, default `0`), `size` (integer, default `20`, maximum `100`).
-  - Operation description notes default sort is newest-first by `created.at_time` (implementation detail for T201; document intended behavior).
-  - Any authenticated token holder may read (no additional role gate).
-  - Responses: `200`/`400` (invalid header values)/`401`/`500`.
-- **`POST /api/event`** remains documented; `EventInput` schema reflects the updated MongoDB dictionary (replacing the minimal `context.profile_id`-only stub where the dictionary/test data imply more fields).
-- Update the `Event` tag description to reflect create + list semantics.
+- **`POST /api/event`** documented with:
+  - `EventInput` request body (`type` only).
+  - `Event` response including server-populated `context`.
+  - Operation description states that `context` is built from all JWT token properties (`create_flask_token` / `Token.to_dict()`); the client does not send context fields.
+- **Do not** add `GET /api/event` or any other Event read/list operations — the mentee UI only posts events.
+- Update the `Event` tag description to reflect create-only semantics and token-sourced context.
 - OpenAPI path casing matches runtime routes: lowercase `/api/event`.
 - The spec parses, every `$ref` resolves, and the API serves it at `/docs/openapi.yaml`.
 
 ## Testing Expectations
 
-This is a documentation/contract task; validate the spec rather than runtime list behavior (T201 implements runtime).
+This is a documentation/contract task; validate the spec rather than runtime behavior (T202 implements POST enhancements).
 
 Run all commands from the **API repository root**.
 
 - **Spec validation**
   - Parses: `pipenv run python -c "import yaml; yaml.safe_load(open('docs/openapi.yaml'))"`
   - No dangling `$ref`s — every `$ref` resolves to a defined component.
-  - Confirm `GET /api/event` uses header-based `offset`/`size` and array response body.
-  - Confirm `Event` and `EventInput` `context` schemas document identifier fields consistent with configurator output.
+  - Confirm only `POST /api/event` is documented (no `GET` list or detail paths).
+  - Confirm `EventInput` has only `type` (no `context` property).
+  - Confirm `Event.context` documents token-sourced fields and `additionalProperties: true`.
 - **Lint**
   - `pipenv run lint`
 - **Packaging verification**
@@ -75,7 +74,7 @@ Run all commands from the **API repository root**.
 
 Paths are relative to the **API repository root**.
 
-- `docs/openapi.yaml` — add `GET /api/event` with offset/size headers and array response; sync `Event` and `EventInput` schemas to MongoDB dictionary
+- `docs/openapi.yaml` — sync `Event` and `EventInput` schemas to MongoDB dictionary; POST-only Event contract with token-sourced context
 
 The agent must not update files outside this list.
 
