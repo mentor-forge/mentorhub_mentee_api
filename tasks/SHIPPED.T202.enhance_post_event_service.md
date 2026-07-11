@@ -1,6 +1,6 @@
 # T202 – Enhance POST event: token-sourced context and link hit aggregation
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: T200  
 **Description**: Update `EventService.create_event` to populate `context` entirely from the JWT token dict (all properties, no hard-coded field list), align create encoding with the updated Event MongoDB schema, and call `AggregationService.add_hit` when posting a `link` event whose token context includes `resource_id`.
@@ -93,4 +93,13 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- `create_event` now sets `context` from `dict(token)`, strips client `context`/`created`, and encodes nested identifier fields.
+- `link` events call `AggregationService.add_hit` when `resource_id` is present on the token; otherwise logs a warning and still creates the event.
+- Unit and E2E tests cover token-sourced context, ignored client context, and `add_hit` integration.
+
+**Testing**
+- `pipenv run test` — 80 passed
+- `pipenv run lint` — passed
+- `pipenv run build` — passed
+- `pipenv run container`, `pipenv run api`, `pipenv run e2e` — 16 passed
