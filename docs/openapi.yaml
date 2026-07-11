@@ -33,7 +33,7 @@ tags:
   - name: Note
     description: Note operations (create only)
   - name: Event
-    description: Event operations (create only)
+    description: Event operations (create only; context populated server-side from JWT token)
   - name: Aggregation
     description: Resource aggregation metrics and related notes (read)
   - name: Resource
@@ -313,7 +313,13 @@ paths:
       tags:
         - Event
       summary: Create a new Event document
-      description: Record a meaningful system event. Requires a valid JWT.
+      description: |
+        Record a meaningful system event. Requires a valid JWT.
+
+        The client sends only `type`. The server populates `context` from all JWT token
+        properties returned by `create_flask_token` (e.g. `user_id`, `name`, `roles`,
+        `profile_id`, `customer_id`, `mentor_id`, `remote_ip`). Clients do not send
+        context fields.
       operationId: createEvent
       security:
         - bearerAuth: []
@@ -779,21 +785,67 @@ components:
           example: link
         context:
           type: object
-          description: Event context (additional properties allowed)
+          description: |
+            Event context populated server-side from the authenticated JWT token (all token
+            properties). Not supplied by the client. Additional properties allowed for
+            forward-compatible token claim expansion.
           additionalProperties: true
           properties:
+            user_id:
+              type: string
+              description: IdP user identifier from the JWT (`sub`)
+              example: auth0|507f1f77bcf86cd799439011
+            name:
+              type: string
+              description: Display name from the JWT
+              example: Jane Mentee
+            roles:
+              type: array
+              description: Roles from the JWT
+              items:
+                type: string
+              example: [mentee]
             profile_id:
               type: string
               description: Profile associated with the event
               pattern: '^[0-9a-fA-F]{24}$'
               example: 507f1f77bcf86cd799439011
+            customer_id:
+              type: string
+              description: Customer identifier from the JWT
+              pattern: '^[0-9a-fA-F]{24}$'
+              example: 507f1f77bcf86cd799439012
+            mentor_id:
+              type: string
+              description: Mentor identifier from the JWT
+              pattern: '^[0-9a-fA-F]{24}$'
+              example: 507f1f77bcf86cd799439013
+            remote_ip:
+              type: string
+              description: HTTP request remote IP from the token
+              format: ip
+              example: 192.168.1.1
+            resource_id:
+              type: string
+              description: Resource identifier when present on the token
+              pattern: '^[0-9a-fA-F]{24}$'
+              example: 507f1f77bcf86cd799439014
+            journey_id:
+              type: string
+              description: Journey identifier when present on the token
+              pattern: '^[0-9a-fA-F]{24}$'
+              example: 507f1f77bcf86cd799439015
         created:
           $ref: '#/components/schemas/Breadcrumb'
 
     EventInput:
       type: object
-      description: Input for creating an Event document
+      description: |
+        Input for creating an Event document. Only `type` is required; `context` is
+        populated server-side from the JWT token.
       additionalProperties: false
+      required:
+        - type
       properties:
         type:
           type: string
@@ -810,16 +862,6 @@ components:
             - note
             - started
           example: link
-        context:
-          type: object
-          description: Event context (additional properties allowed)
-          additionalProperties: true
-          properties:
-            profile_id:
-              type: string
-              description: Profile associated with the event
-              pattern: '^[0-9a-fA-F]{24}$'
-              example: 507f1f77bcf86cd799439011
     Resource:
       type: object
       description: A learning resource (link) (read-only)

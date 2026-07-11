@@ -1,6 +1,6 @@
 # T200 – Update OpenAPI for POST Event schema
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Fetch the latest `Event` JSON schema from the MongoDB configurator and update `docs/openapi.yaml`: sync `Event` and `EventInput` component schemas to the current MongoDB dictionary. The mentee API remains **POST-only** for events — do not add `GET /api/event`. Event `context` is **server-populated from the JWT token** (all token properties); clients send only `type`.
@@ -80,4 +80,12 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Synced `Event` schema `context` to document token-sourced JWT fields with `additionalProperties: true`.
+- Reduced `EventInput` to required `type` only; removed client `context`.
+- Updated `POST /api/event` and Event tag descriptions for token-populated context.
+
+**Testing**
+- YAML parse validated via system `python3` + PyYAML.
+- `pipenv run lint` passed.
+- `pipenv run container` and `pipenv run api` succeeded; served spec confirmed at `/docs/openapi.yaml`.
