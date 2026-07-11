@@ -8,9 +8,10 @@ from bson import ObjectId
 from src.services.note_service import NoteService
 from api_utils.flask_utils.exceptions import (
     HTTPBadRequest,
-    HTTPNotFound,
     HTTPInternalServerError,
 )
+
+CREATED_ID = "507f1f77bcf86cd799439011"
 
 
 class TestNoteService(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestNoteService(unittest.TestCase):
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
-        mock_mongo.create_document.return_value = "123"
+        mock_mongo.create_document.return_value = CREATED_ID
         mock_get_mongo.return_value = mock_mongo
 
         data = {
@@ -43,9 +44,9 @@ class TestNoteService(unittest.TestCase):
             "status": "active",
         }
 
-        note_id = NoteService.create_note(data, self.mock_token, self.mock_breadcrumb)
+        note = NoteService.create_note(data, self.mock_token, self.mock_breadcrumb)
 
-        self.assertEqual(note_id, "123")
+        self.assertEqual(str(note["_id"]), CREATED_ID)
         mock_mongo.create_document.assert_called_once()
         created_data = mock_mongo.create_document.call_args[0][1]
         self.assertIn("created", created_data)
@@ -60,44 +61,15 @@ class TestNoteService(unittest.TestCase):
         mock_get_config.return_value = mock_config
 
         mock_mongo = MagicMock()
-        mock_mongo.create_document.return_value = "123"
+        mock_mongo.create_document.return_value = CREATED_ID
         mock_get_mongo.return_value = mock_mongo
 
         data = {"_id": "should-be-removed", "note": "test"}
 
-        NoteService.create_note(data, self.mock_token, self.mock_breadcrumb)
+        result = NoteService.create_note(data, self.mock_token, self.mock_breadcrumb)
 
-        created_data = mock_mongo.create_document.call_args[0][1]
-        self.assertNotIn("_id", created_data)
-
-    @patch("src.services.note_service.Config.get_instance")
-    @patch("src.services.note_service.MongoIO.get_instance")
-    def test_get_note_success(self, mock_get_mongo, mock_get_config):
-        mock_config = MagicMock()
-        mock_config.NOTE_COLLECTION_NAME = "Note"
-        mock_get_config.return_value = mock_config
-
-        mock_mongo = MagicMock()
-        mock_mongo.get_document.return_value = {"_id": "123", "note": "hello"}
-        mock_get_mongo.return_value = mock_mongo
-
-        note = NoteService.get_note("123", self.mock_token, self.mock_breadcrumb)
-
-        self.assertEqual(note["_id"], "123")
-
-    @patch("src.services.note_service.Config.get_instance")
-    @patch("src.services.note_service.MongoIO.get_instance")
-    def test_get_note_not_found(self, mock_get_mongo, mock_get_config):
-        mock_config = MagicMock()
-        mock_config.NOTE_COLLECTION_NAME = "Note"
-        mock_get_config.return_value = mock_config
-
-        mock_mongo = MagicMock()
-        mock_mongo.get_document.return_value = None
-        mock_get_mongo.return_value = mock_mongo
-
-        with self.assertRaises(HTTPNotFound):
-            NoteService.get_note("999", self.mock_token, self.mock_breadcrumb)
+        self.assertEqual(str(result["_id"]), CREATED_ID)
+        self.assertNotEqual(str(result["_id"]), "should-be-removed")
 
     @patch("src.services.note_service.Config.get_instance")
     @patch("src.services.note_service.MongoIO.get_instance")

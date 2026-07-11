@@ -4,11 +4,12 @@ Event service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Event domain.
 """
 
+from bson import ObjectId
+
 from api_utils import MongoIO, Config
 from api_utils.mongo_utils import encode_document
 from api_utils.flask_utils.exceptions import (
     HTTPForbidden,
-    HTTPNotFound,
     HTTPInternalServerError,
 )
 import logging
@@ -40,7 +41,7 @@ class EventService:
             breadcrumb: Breadcrumb dictionary for logging
 
         Returns:
-            str: The ID of the created event document
+            dict: The created event document including _id
         """
         try:
             EventService._check_permission(token, "create")
@@ -59,6 +60,8 @@ class EventService:
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             event_id = mongo.create_document(config.EVENT_COLLECTION_NAME, data)
+            if "_id" not in data:
+                data["_id"] = ObjectId(event_id)
             logger.info(f"Created event {event_id} for user {token.get('user_id')}")
 
             if data.get("type") == "link":
@@ -72,34 +75,10 @@ class EventService:
                         "link event created without resource_id in token; skipping add_hit"
                     )
 
-            return event_id
+            return data
         except HTTPForbidden:
             raise
         except Exception as e:
             error_msg = str(e)
             logger.error(f"Error creating event: {error_msg}")
             raise HTTPInternalServerError(f"Failed to create event: {error_msg}")
-
-    @staticmethod
-    def get_event(event_id, token, breadcrumb):
-        """
-        Retrieve a specific event document by ID.
-
-        Used internally after create to return the created document.
-        """
-        try:
-            EventService._check_permission(token, "read")
-
-            mongo = MongoIO.get_instance()
-            config = Config.get_instance()
-            event = mongo.get_document(config.EVENT_COLLECTION_NAME, event_id)
-            if event is None:
-                raise HTTPNotFound(f"Event {event_id} not found")
-
-            logger.info(f"Retrieved event {event_id} for user {token.get('user_id')}")
-            return event
-        except HTTPNotFound:
-            raise
-        except Exception as e:
-            logger.error(f"Error retrieving event {event_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve event {event_id}")

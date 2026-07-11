@@ -4,13 +4,14 @@ Note service for business logic and RBAC.
 Handles RBAC checks and MongoDB operations for Note domain.
 """
 
+from bson import ObjectId
+
 from api_utils import MongoIO, Config
 from api_utils.mongo_utils import encode_document
 from pymongo import DESCENDING
 from api_utils.flask_utils.exceptions import (
     HTTPBadRequest,
     HTTPForbidden,
-    HTTPNotFound,
     HTTPInternalServerError,
 )
 import logging
@@ -42,7 +43,7 @@ class NoteService:
             breadcrumb: Breadcrumb dictionary for logging
 
         Returns:
-            str: The ID of the created note document
+            dict: The created note document including _id
         """
         try:
             NoteService._check_permission(token, "create")
@@ -58,8 +59,10 @@ class NoteService:
             mongo = MongoIO.get_instance()
             config = Config.get_instance()
             note_id = mongo.create_document(config.NOTE_COLLECTION_NAME, data)
-            logger.info(f"Created note { note_id} for user {token.get('user_id')}")
-            return note_id
+            if "_id" not in data:
+                data["_id"] = ObjectId(note_id)
+            logger.info(f"Created note {note_id} for user {token.get('user_id')}")
+            return data
         except HTTPForbidden:
             raise
         except Exception as e:
@@ -111,27 +114,3 @@ class NoteService:
             raise HTTPInternalServerError(
                 f"Failed to retrieve notes for resource {resource_id}"
             )
-
-    @staticmethod
-    def get_note(note_id, token, breadcrumb):
-        """
-        Retrieve a specific note document by ID.
-
-        Used internally after create to return the created document.
-        """
-        try:
-            NoteService._check_permission(token, "read")
-
-            mongo = MongoIO.get_instance()
-            config = Config.get_instance()
-            note = mongo.get_document(config.NOTE_COLLECTION_NAME, note_id)
-            if note is None:
-                raise HTTPNotFound(f"Note { note_id} not found")
-
-            logger.info(f"Retrieved note { note_id} for user {token.get('user_id')}")
-            return note
-        except HTTPNotFound:
-            raise
-        except Exception as e:
-            logger.error(f"Error retrieving note { note_id}: {str(e)}")
-            raise HTTPInternalServerError(f"Failed to retrieve note { note_id}")
