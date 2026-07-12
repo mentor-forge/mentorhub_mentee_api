@@ -10,7 +10,7 @@ from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from src.services.resource_service import ResourceService
+from api_utils.services import ResourceService
 
 import logging
 
