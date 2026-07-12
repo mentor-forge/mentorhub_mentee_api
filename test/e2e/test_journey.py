@@ -3,11 +3,6 @@ E2E tests for Journey endpoints.
 """
 
 import pytest
-
-pytestmark = pytest.mark.skip(
-    reason="Deferred: Journey schema updates pending (future issue)"
-)
-
 import requests
 
 from .e2e_auth import get_auth_token
@@ -16,68 +11,46 @@ BASE_URL = "http://localhost:8393"
 
 
 def _err(response, expected):
-    """Format assertion error with response body for debugging."""
     body = response.text[:300] if response.text else "(empty)"
     return f"Expected {expected}, got {response.status_code}. Response: {body}"
 
 
 @pytest.mark.e2e
-def test_create_journey_endpoint():
-    """Test POST /api/journey endpoint and verify record persists in database."""
-    token = get_auth_token()
+def test_get_my_journey_endpoint():
+    """GET /api/journey returns the token owner's journey document."""
+    token = get_auth_token(profile_id="e00000000000000000000001")
     headers = {"Authorization": f"Bearer {token}"}
-    data = {
-        "name": "e2e-test-journey",
-        "description": "E2E test journey document",
-    }
 
-    response = requests.post(f"{BASE_URL}/api/journey", headers=headers, json=data)
-    assert response.status_code == 201, _err(response, 201)
-
-    response_data = response.json()
-    assert "_id" in response_data, "Response missing '_id' key"
-    assert response_data["name"] == "e2e-test-journey"
-    assert "created" in response_data
-    assert "saved" in response_data
-
-
-@pytest.mark.e2e
-def test_get_journeys_endpoint():
-    """Test GET /api/journey endpoint."""
-    token = get_auth_token()
-    headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/journey", headers=headers)
     assert response.status_code == 200, _err(response, 200)
 
-    response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert "limit" in response_data, "Response should have 'limit' key"
-    assert "has_more" in response_data, "Response should have 'has_more' key"
-    assert "next_cursor" in response_data, "Response should have 'next_cursor' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
+    data = response.json()
+    assert data["_id"] == "e00000000000000000000001"
+    assert data.get("profile_id") == "e00000000000000000000001"
+    assert "created" in data
+    assert "saved" in data
+    assert "library" in data
+    assert "now" in data
+    assert "next" in data
 
 
 @pytest.mark.e2e
-def test_get_journeys_with_name_filter():
-    """Test GET /api/journey with name query parameter."""
-    token = get_auth_token()
+def test_get_my_journey_idempotent():
+    """Repeated GET /api/journey returns the same journey _id."""
+    profile_id = "e00000000000000000000002"
+    token = get_auth_token(profile_id=profile_id)
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/journey?name=e2e", headers=headers)
-    assert response.status_code == 200, _err(response, 200)
 
-    response_data = response.json()
-    assert isinstance(
-        response_data, dict
-    ), "Response should be a dict (infinite scroll format)"
-    assert "items" in response_data, "Response should have 'items' key"
-    assert isinstance(response_data["items"], list), "Items should be a list"
+    first = requests.get(f"{BASE_URL}/api/journey", headers=headers)
+    second = requests.get(f"{BASE_URL}/api/journey", headers=headers)
+
+    assert first.status_code == 200, _err(first, 200)
+    assert second.status_code == 200, _err(second, 200)
+    assert first.json()["_id"] == second.json()["_id"] == profile_id
 
 
 @pytest.mark.e2e
 def test_journey_endpoints_require_auth():
-    """Test that journey endpoints require authentication."""
+    """Journey endpoints require authentication."""
     response = requests.get(f"{BASE_URL}/api/journey")
     assert response.status_code == 401, f"Expected 401, got {response.status_code}"

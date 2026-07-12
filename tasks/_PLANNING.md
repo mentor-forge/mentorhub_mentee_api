@@ -1,6 +1,6 @@
 # API Task Automation Framework - Planning
 
-This folder contains coding tasks that an orchestration agent can execute, based on the context and instructions in each task file. This file is a guide for an agent that is helping to plan changes by creating task files to achieve a goal. Create tasks following the [naming conventions](#naming-conventions) and guides below. 
+This folder contains coding tasks that an orchestration agent can execute, based on the context and instructions in each task file. This file is a guide for an agent that is helping to plan changes by creating task files to achieve a goal. Create tasks following the [naming conventions](#naming-conventions) and guides below. When planning, only create tasks, do not execute any tasks, and do not change any files outside of the tasks folder. 
 
 - **Path anchoring**
   - All paths in task files are relative to **this API repository root** (the directory that contains `Pipfile`).
@@ -12,7 +12,7 @@ This folder contains coding tasks that an orchestration agent can execute, based
 - ../mentorhub/DeveloperEdition/standards/api_standards.md
 - ../mentorhub_api_utils/README.md
 - ./README.md
-- ./tasks/_ORCHESTRATION.md
+- ./tasks/_ORCHESTRATE.md
 - ./tasks/_PLANNING.md (this file)
 
 ## Task File Layout
@@ -77,12 +77,12 @@ Each task file must contain the following sections under H1 and H2 headings.
 
 ## Naming Conventions
 - **Recommended filename pattern**:
-  - `STATUS.LNNN.short_task_name.md`
+  - `STATUS.LNNN.short_task_name.md` where L is (F)eature or (D)efect, and NNN is a serial task number. When planning, create only PENDING status tasks. 
   - Examples:
-    - `AS_NEEDED.T998.example_update_openapi.md`
-    - `PENDING.L010.update_profile_openapi.md`
-    - `RUNNING.L020.add_profile_field_tests.md`
-    - `SHIPPED.L010.update_profile_openapi.md`
+    - `PENDING.D001.example_defect.md`
+    - `PENDING.F010.update_profile_openapi.md`
+    - `PENDING.F011.add_profile_field_tests.md`
+    - `PENDING.F012.update_profile_openapi.md`
 
 ## External repository boundaries
 

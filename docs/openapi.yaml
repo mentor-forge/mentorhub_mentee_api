@@ -29,7 +29,9 @@ tags:
   - name: Metrics
     description: Monitoring endpoints
   - name: Journey
-    description: Journey operations (create, read, update)
+    description: |
+      Token-scoped Journey read (get-or-create), ownership RBAC on PATCH, and
+      server-managed advance/complete mutations that record Events.
   - name: Note
     description: Note operations (create only)
   - name: Event
@@ -94,90 +96,36 @@ paths:
               schema:
                 type: string
 
-  /api/Journey:
+  /api/journey:
     get:
       tags:
         - Journey
-      summary: Get all Journey documents
-      description: Retrieve infinite scroll batch of sorted, filtered Journey documents
-      operationId: getJourneys
+      summary: Get authenticated user's Journey
+      description: |
+        Return the Journey for the authenticated user. The server resolves the document
+        using `profile_id` from the JWT. When no Journey exists, the server clones the
+        template Journey (`ffff00000000000000000001`), sets `_id` and `profile_id` to
+        the token's `profile_id`, and returns the new document.
+      operationId: getMyJourney
       security:
         - bearerAuth: []
-      parameters:
-        - name: name
-          in: query
-          required: false
-          description: Optional name filter (supports partial matches, case-insensitive)
-          schema:
-            type: string
-            example: my-Journey
-        - name: after_id
-          in: query
-          required: false
-          description: Cursor for infinite scroll (ID of last item from previous batch, omit for first request)
-          schema:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
-            example: 507f1f77bcf86cd799439011
-        - name: limit
-          in: query
-          required: false
-          description: Items per page (max 100)
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 10
-            example: 10
-        - name: sort_by
-          in: query
-          required: false
-          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
-          schema:
-            type: string
-            default: name
-            example: name
-        - name: order
-          in: query
-          required: false
-          description: Sort order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: asc
-            example: asc
       responses:
         '200':
-          description: Successfully retrieved Journeys
+          description: Successfully retrieved Journey
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - items
-                  - limit
-                  - has_more
-                  - next_cursor
-                properties:
-                  items:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Journey'
-                  limit:
-                    type: integer
-                    example: 10
-                  has_more:
-                    type: boolean
-                    example: true
-                  next_cursor:
-                    type: string
-                    nullable: true
-                    pattern: '^[0-9a-fA-F]{24}$'
-                    example: 507f1f77bcf86cd799439011
+                $ref: '#/components/schemas/Journey'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Template Journey not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
     post:
@@ -212,47 +160,100 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
 
-  /api/Journey/{JourneyId}:
-    get:
+  /api/journey/advance/{resource_id}:
+    patch:
       tags:
         - Journey
-      summary: Get Journey by JourneyId
-      description: Retrieve a specific Journey document by its JourneyId
-      operationId: getJourney
+      summary: Advance a resource from next to now
+      description: |
+        Move a resource from the Journey `next` scope into `now` by Resource ID.
+        Creates an `advanced` Event server-side (context populated from the JWT).
+      operationId: advanceJourneyResource
       security:
         - bearerAuth: []
       parameters:
-        - name: JourneyId
+        - name: resource_id
           in: path
           required: true
-          description: The Journey ID (MongoDB ObjectId)
+          description: The Resource ID (MongoDB ObjectId)
           schema:
             type: string
             pattern: '^[0-9a-fA-F]{24}$'
             example: 507f1f77bcf86cd799439011
       responses:
         '200':
-          description: Successfully retrieved Journey
+          description: Journey updated successfully
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Journey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/journey/complete/{resource_id}:
+    patch:
+      tags:
+        - Journey
+      summary: Complete a resource in now
+      description: |
+        Record completion of a resource in `now` — move it to `library`, update
+        Resource_Aggregation counters, and create a `completed` Event server-side.
+      operationId: completeJourneyResource
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: resource_id
+          in: path
+          required: true
+          description: The Resource ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JourneyCompleteInput'
+      responses:
+        '200':
+          description: Journey updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Journey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/journey/{journey_id}:
     patch:
       tags:
         - Journey
       summary: Update Journey document
-      description: Update a Journey document (requires admin role). Cannot update _id, created, or saved fields.
+      description: |
+        Update a Journey document. Requires ownership (`journey_id` equals token
+        `profile_id`) or `admin` in token `roles`. Cannot update `_id`, `profile_id`,
+        `created`, `saved`, `library`, `now`, or `next` — those are server-managed.
       operationId: updateJourney
       security:
         - bearerAuth: []
       parameters:
-        - name: JourneyId
+        - name: journey_id
           in: path
           required: true
           description: The Journey ID (MongoDB ObjectId)
@@ -618,55 +619,143 @@ components:
 
     Journey:
       type: object
-      description: Journey domain document
+      description: A learning journey for a craftsperson
       additionalProperties: false
       required:
         - _id
-        - name
         - created
         - saved
       properties:
         _id:
           type: string
-          description: MongoDB document ID
+          description: The unique identifier for the Learning Journey
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
-        name:
+        profile_id:
           type: string
-          description: Journey name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Journey
-        description:
-          type: string
-          description: Journey description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Journey document
+          description: The Profile ID of the owner of this journey
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
         status:
           type: string
-          description: Journey status
+          description: Status of the document
           enum:
             - active
             - archived
           example: active
+        library:
+          type: array
+          description: Completed resources
+          items:
+            $ref: '#/components/schemas/JourneyLibraryItem'
+        now:
+          type: array
+          description: Resources the person is currently working on
+          items:
+            $ref: '#/components/schemas/JourneyNowItem'
+        next:
+          type: array
+          description: Modules the mentee will work on next
+          items:
+            $ref: '#/components/schemas/JourneyNextModule'
+        later:
+          type: array
+          description: Path IDs the mentee might work on someday
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
         created:
           $ref: '#/components/schemas/Breadcrumb'
         saved:
           $ref: '#/components/schemas/Breadcrumb'
 
+    JourneyLibraryItem:
+      type: object
+      description: A completed resource in the Journey library
+      additionalProperties: false
+      properties:
+        resource_id:
+          type: string
+          description: The Resource ID
+          pattern: '^[0-9a-fA-F]{24}$'
+        started:
+          type: string
+          format: date-time
+          description: The first time the user followed the resource link
+        completed:
+          type: string
+          format: date-time
+          description: When the user marked the resource complete
+        used:
+          type: integer
+          minimum: 0
+          description: The count of times the link has been followed
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: The mentee's star rating for this completed resource
+
+    JourneyNowItem:
+      type: object
+      description: An in-progress resource in the Journey now scope
+      additionalProperties: false
+      properties:
+        resource_id:
+          type: string
+          description: The Resource ID
+          pattern: '^[0-9a-fA-F]{24}$'
+        added:
+          type: string
+          format: date-time
+          description: When the resource was added to the Now scope
+        started:
+          type: string
+          format: date-time
+          description: The first time the link was followed
+        used:
+          type: integer
+          minimum: 0
+          description: The count of times the link was followed
+
+    JourneyNextTopic:
+      type: object
+      description: A topic within a Journey next module
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        resources:
+          type: array
+          description: Resource IDs for this topic
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+
+    JourneyNextModule:
+      type: object
+      description: A module in the Journey next scope
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          pattern: '^[^\s]{1,40}$'
+        description:
+          type: string
+          pattern: '^[^\t\n]{0,255}$'
+        topics:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyNextTopic'
+
     JourneyInput:
       type: object
       description: Input for creating a Journey document
       properties:
-        name:
-          type: string
-          description: Journey name
-          pattern: '^[^\s]{1,40}$'
-          example: my-Journey
-        description:
-          type: string
-          description: Journey description
-          pattern: '^[^\t\n]{0,255}$'
-          example: A sample Journey document
         status:
           type: string
           description: Journey status
@@ -674,25 +763,63 @@ components:
             - active
             - archived
           example: active
+        library:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyLibraryItem'
+        now:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyNowItem'
+        next:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyNextModule'
+        later:
+          type: array
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
 
     JourneyUpdate:
       type: object
-      description: Fields to update in a Journey document (cannot include _id, created, saved)
+      description: |
+        Fields to update in a Journey document. Cannot include _id, profile_id,
+        created, saved, library, now, or next.
+      additionalProperties: false
       properties:
-        name:
-          type: string
-          description: Journey name
-          pattern: '^[^\s]{1,40}$'
-        description:
-          type: string
-          description: Journey description
-          pattern: '^[^\t\n]{0,255}$'
         status:
           type: string
           description: Journey status
           enum:
             - active
             - archived
+        later:
+          type: array
+          description: Path IDs the mentee might work on someday
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+
+    JourneyCompleteInput:
+      type: object
+      description: Optional input when completing a resource in now
+      additionalProperties: false
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: Star rating for the completed resource
+        note:
+          type: string
+          maxLength: 4096
+          description: Optional note about the resource
+        duration:
+          type: string
+          description: Time spent on the resource (ISO 8601 duration)
+          pattern: '^P(?!$)(\d+Y)?(\d+M)?(\d+W)?(\d+D)?(T(\d+H)?(\d+M)?(\d+(\.\d+)?S)?)?$'
+          example: PT1H30M
     Note:
       type: object
       description: A note about a resource
