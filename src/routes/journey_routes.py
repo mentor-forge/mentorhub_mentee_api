@@ -3,7 +3,6 @@ Journey routes for Flask API.
 
 Provides endpoints for Journey domain:
 - GET /api/journey - Get authenticated user's journey (get-or-create)
-- POST /api/journey - Create a new journey document
 - PATCH /api/journey/advance/<resource_id> - Advance resource from next to now
 - PATCH /api/journey/complete/<resource_id> - Complete resource in now
 - PATCH /api/journey/<id> - Update a journey document
@@ -35,20 +34,6 @@ def create_journey_routes():
             f"get_my_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
         )
         return jsonify(journey), 200
-
-    @journey_routes.route("", methods=["POST"])
-    @handle_route_exceptions
-    def create_journey():
-        """POST /api/journey - Create a new journey document."""
-        token = create_flask_token()
-        breadcrumb = create_flask_breadcrumb(token)
-        data = request.get_json() or {}
-        journey_id = JourneyService.create_journey(data, token, breadcrumb)
-        journey = JourneyService.get_journey(journey_id, token, breadcrumb)
-        logger.info(
-            f"create_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
-        )
-        return jsonify(journey), 201
 
     @journey_routes.route("/advance/<resource_id>", methods=["PATCH"])
     @handle_route_exceptions

@@ -128,37 +128,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
-    post:
-      tags:
-        - Journey
-      summary: Create a new Journey document
-      description: Create a new Journey document (requires staff or admin role)
-      operationId: createJourney
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/JourneyInput'
-      responses:
-        '201':
-          description: Journey created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                    pattern: '^[0-9a-fA-F]{24}$'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalError'
 
   /api/journey/advance/{resource_id}:
     patch:
@@ -855,35 +824,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JourneyNextTopic'
-
-    JourneyInput:
-      type: object
-      description: Input for creating a Journey document
-      properties:
-        status:
-          type: string
-          description: Journey status
-          enum:
-            - active
-            - archived
-          example: active
-        library:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyLibraryItem'
-        now:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyNowItem'
-        next:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyNextModule'
-        later:
-          type: array
-          items:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
 
     JourneyUpdate:
       type: object
