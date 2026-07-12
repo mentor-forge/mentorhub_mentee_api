@@ -1,6 +1,6 @@
 # L140 – Implement PATCH /api/journey/advance/{resource_id} (next → now, advanced event)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L130  
 **Description**: Add `PATCH /api/journey/advance/{resource_id}` to move a resource from the Journey `next` scope into `now` by Resource ID, and record an `advanced` Event via `EventService` (not via aggregation helpers).
@@ -86,4 +86,9 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Added `PATCH /api/journey/advance/<resource_id>` and `JourneyService.advance_resource`.
+- Moves resource from `next` to `now`; creates `advanced` event via `EventService`.
+
+**Testing**
+- Unit and route tests for advance flow passed.

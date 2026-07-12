@@ -1,6 +1,6 @@
 # L130 – Implement PATCH /api/journey RBAC (ownership or admin)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L120  
 **Description**: Enforce RBAC on `PATCH /api/journey/{journey_id}`: caller must own the journey (`journey_id` equals token `profile_id`) or have `admin` in token `roles`. Align update payload validation with the L110 OpenAPI `JourneyUpdate` contract.
@@ -72,4 +72,10 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Implemented `_check_permission` for update (owner or admin).
+- Blocked PATCH of server-managed fields (`library`, `now`, `next`, etc.).
+- Added RBAC unit and route tests.
+
+**Testing**
+- `pipenv run test`: RBAC tests passed.

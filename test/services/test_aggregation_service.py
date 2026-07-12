@@ -8,6 +8,7 @@ from bson import ObjectId
 from src.services.aggregation_service import AggregationService
 from api_utils.flask_utils.exceptions import (
     HTTPBadRequest,
+    HTTPForbidden,
     HTTPInternalServerError,
 )
 
@@ -190,6 +191,115 @@ class TestAggregationService(unittest.TestCase):
             AggregationService.get_aggregation_for_resource(
                 self.resource_id, self.mock_token, self.mock_breadcrumb
             )
+
+    @patch("src.services.aggregation_service.Config.get_instance")
+    @patch("src.services.aggregation_service.MongoIO.get_instance")
+    def test_add_completion_increments_counters(self, mock_get_mongo, mock_get_config):
+        mock_config = MagicMock()
+        mock_config.RESOURCE_AGGREGATION_COLLECTION_NAME = "Resource_Aggregation"
+        mock_config.ROLE_MENTEE = "mentee"
+        mock_get_config.return_value = mock_config
+
+        aggregation_doc = {
+            "_id": ObjectId(self.resource_id),
+            "completions": 2,
+            "rating_count": 2,
+            "rating_sum": 6,
+            "note_count": 1,
+            "duration": "PT1H",
+        }
+        updated_doc = {
+            **aggregation_doc,
+            "completions": 3,
+            "rating_count": 3,
+            "rating_sum": 10,
+            "note_count": 2,
+        }
+
+        mock_mongo = MagicMock()
+        mock_mongo.get_document.return_value = aggregation_doc
+        mock_mongo.update_document.return_value = updated_doc
+        mock_get_mongo.return_value = mock_mongo
+
+        mentee_token = {**self.mock_token, "roles": ["mentee"]}
+
+        with patch(
+            "src.services.note_service.NoteService.create_note"
+        ) as mock_create_note:
+            mock_create_note.return_value = {"_id": "note1"}
+            result = AggregationService.add_completion(
+                self.resource_id,
+                4,
+                "helpful resource",
+                "PT30M",
+                mentee_token,
+                self.mock_breadcrumb,
+            )
+
+        self.assertEqual(result["completions"], 3)
+        self.assertEqual(result["rating_sum"], 10)
+        mock_create_note.assert_called_once()
+
+    @patch("src.services.aggregation_service.Config.get_instance")
+    @patch("src.services.aggregation_service.MongoIO.get_instance")
+    def test_add_completion_requires_mentee_role(self, mock_get_mongo, mock_get_config):
+        mock_config = MagicMock()
+        mock_config.RESOURCE_AGGREGATION_COLLECTION_NAME = "Resource_Aggregation"
+        mock_config.ROLE_MENTEE = "mentee"
+        mock_get_config.return_value = mock_config
+
+        mock_mongo = MagicMock()
+        mock_mongo.get_document.return_value = {
+            "_id": ObjectId(self.resource_id),
+            "completions": 0,
+            "rating_count": 0,
+            "rating_sum": 0,
+        }
+        mock_get_mongo.return_value = mock_mongo
+
+        admin_token = {**self.mock_token, "roles": ["admin"]}
+
+        with self.assertRaises(HTTPForbidden):
+            AggregationService.add_completion(
+                self.resource_id,
+                4,
+                None,
+                None,
+                admin_token,
+                self.mock_breadcrumb,
+            )
+
+    @patch("src.services.event_service.EventService.create_event")
+    @patch("src.services.aggregation_service.Config.get_instance")
+    @patch("src.services.aggregation_service.MongoIO.get_instance")
+    def test_add_completion_does_not_create_events(
+        self, mock_get_mongo, mock_get_config, mock_create_event
+    ):
+        mock_config = MagicMock()
+        mock_config.RESOURCE_AGGREGATION_COLLECTION_NAME = "Resource_Aggregation"
+        mock_config.ROLE_MENTEE = "mentee"
+        mock_get_config.return_value = mock_config
+
+        mock_mongo = MagicMock()
+        mock_mongo.get_document.return_value = {
+            "_id": ObjectId(self.resource_id),
+            "completions": 0,
+            "rating_count": 0,
+            "rating_sum": 0,
+            "duration": "PT0S",
+        }
+        mock_mongo.update_document.return_value = {
+            "_id": ObjectId(self.resource_id),
+            "completions": 1,
+        }
+        mock_get_mongo.return_value = mock_mongo
+
+        mentee_token = {**self.mock_token, "roles": ["mentee"]}
+        AggregationService.add_completion(
+            self.resource_id, 3, None, None, mentee_token, self.mock_breadcrumb
+        )
+
+        mock_create_event.assert_not_called()
 
 
 if __name__ == "__main__":

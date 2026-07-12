@@ -1,6 +1,6 @@
 # L110 – Update OpenAPI for Journey endpoints
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Contract-first update to `docs/openapi.yaml` for the mentee Journey API: sync the `Journey` schema to the MongoDB dictionary, replace the list endpoint with a token-scoped get-or-create read, document ownership RBAC on PATCH, and add `advance` and `complete` mutation paths. Remove `GET /api/journey` infinite-scroll list (no list-journeys page).
@@ -112,4 +112,13 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Synced Journey OpenAPI to MongoDB dictionary (`library`, `now`, `next`, `later`, `profile_id`).
+- Replaced list/GET-by-id with token-scoped `GET /api/journey`.
+- Documented `PATCH` ownership RBAC, `advance/{resource_id}`, and `complete/{resource_id}`.
+- Fixed path casing to lowercase `/api/journey`.
+
+**Testing**
+- OpenAPI YAML parse validated.
+- `pipenv run lint` passed.
+- `pipenv run container` succeeded.

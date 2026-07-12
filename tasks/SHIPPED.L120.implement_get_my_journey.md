@@ -1,6 +1,6 @@
 # L120 – Implement GET /api/journey (token owner's journey, get-or-create)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L110  
 **Description**: Implement `GET /api/journey` to return the authenticated user's Journey (`_id` = token `profile_id`), cloning the template Journey when missing. Remove the infinite-scroll list endpoint and `GET /api/journey/<id>`.
@@ -91,4 +91,11 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Implemented `JourneyService.get_my_journey` with template clone from `ffff00000000000000000001`.
+- Removed list and GET-by-id routes; `GET /api/journey` returns token owner's journey.
+- Rewrote unit, route, and E2E tests (get-or-create with unique profile IDs).
+
+**Testing**
+- `pipenv run test`: 96 passed.
+- `pipenv run lint` and `pipenv run build`: clean.

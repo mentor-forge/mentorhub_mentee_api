@@ -1,6 +1,6 @@
 # L150 – Implement PATCH /api/journey/complete/{resource_id} (now → library, aggregation, completed event)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L140  
 **Description**: Add `PATCH /api/journey/complete/{resource_id}` to move a resource from `now` to `library`, update Resource_Aggregation via `AggregationService.add_completion` (no event creation inside aggregation), and record a `completed` Event from the route/service layer.
@@ -100,4 +100,11 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Added `PATCH /api/journey/complete/<resource_id>` and `JourneyService.complete_resource`.
+- Implemented `AggregationService.add_completion` (mentee RBAC, no events).
+- Complete flow creates `completed` event at PATCH layer.
+
+**Testing**
+- `pipenv run test`: 96 passed including add_completion and complete tests.
+- `pipenv run container`: image built successfully.
