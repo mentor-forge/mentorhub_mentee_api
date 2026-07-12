@@ -1,6 +1,6 @@
 # L182 – Adopt paginated Get List on GET /api/path (breaking)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L180  
 **Description**: **Breaking change**: `PathService.get_paths` in api-utils 0.5.0 paginates by default (`offset=0`, `size=20`). Update `GET /api/path` to read `offset`/`size` headers and optional filter/sort query params via `parse_list_request`; align OpenAPI and tests — callers no longer receive the full path collection without paging.
@@ -77,4 +77,13 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary of changes**
+- `GET /api/path` uses `parse_list_request` with `PATH_LIST_FILTERS`/`PATH_LIST_ORDER`.
+- OpenAPI updated for paginated path list (breaking: no longer returns full collection by default).
+- Route and E2E tests cover pagination headers and name filter.
+
+**Test results**
+- `pipenv run test`: 46 passed
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container` + `pipenv run api` + path E2E: passed

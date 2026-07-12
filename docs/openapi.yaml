@@ -480,14 +480,69 @@ paths:
     get:
       tags:
         - Path
-      summary: Get all Path documents
+      summary: Get Path documents
       description: |
-        Retrieve all Path documents (read-only), sorted by `name` ascending.
+        Retrieve a paginated array of Path documents (read-only).
 
-        Returns a plain JSON array — no pagination or infinite-scroll parameters.
+        Pagination is controlled by request headers:
+        - `offset` — zero-based start index (default `0`)
+        - `size` — page size (default `20`, maximum `100`)
+
+        Optional query filters:
+        - `name` — case-insensitive substring match on `name`
+
+        Optional sort query params:
+        - `sort_by` — whitelisted field (`name`; default `name`)
+        - `order` — `asc` or `desc` (default `asc`)
+
+        Returns a plain JSON array (one page). Clients needing the full collection must iterate with `offset`/`size` headers.
       operationId: getPaths
       security:
         - bearerAuth: []
+      parameters:
+        - name: offset
+          in: header
+          required: false
+          description: Zero-based index of the first path to return
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+        - name: size
+          in: header
+          required: false
+          description: Number of paths to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: name
+          in: query
+          required: false
+          description: Case-insensitive substring filter on path name
+          schema:
+            type: string
+            example: onboarding
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (name)
+          schema:
+            type: string
+            default: name
+            example: name
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+            example: asc
       responses:
         '200':
           description: Successfully retrieved Paths
@@ -497,6 +552,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Path'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':

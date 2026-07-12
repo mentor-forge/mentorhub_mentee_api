@@ -27,7 +27,7 @@ def _err(response, expected):
 
 @pytest.mark.e2e
 def test_get_paths_endpoint():
-    """Test GET /api/path endpoint."""
+    """Test GET /api/path returns a paginated JSON array."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{BASE_URL}/api/path", headers=headers)
@@ -38,12 +38,59 @@ def test_get_paths_endpoint():
 
 
 @pytest.mark.e2e
+def test_get_paths_with_pagination_headers():
+    """Test GET /api/path with offset/size headers."""
+    token = get_auth_token()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "offset": "0",
+        "size": "5",
+    }
+    response = requests.get(f"{BASE_URL}/api/path", headers=headers)
+    assert response.status_code == 200, _err(response, 200)
+
+    response_data = response.json()
+    assert isinstance(response_data, list), "Response should be a JSON array"
+    assert len(response_data) <= 5, "Response should respect size header"
+
+
+@pytest.mark.e2e
+def test_get_paths_with_name_filter():
+    """Test GET /api/path with optional name filter query param."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/path",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    paths = list_response.json()
+    if not paths or not paths[0].get("name"):
+        pytest.skip("No named paths available for filter test")
+
+    needle = paths[0]["name"][:3]
+    filtered_response = requests.get(
+        f"{BASE_URL}/api/path",
+        headers={**headers, "size": "100"},
+        params={"name": needle},
+    )
+    assert filtered_response.status_code == 200, _err(filtered_response, 200)
+    filtered = filtered_response.json()
+    for path in filtered:
+        assert needle.lower() in path.get("name", "").lower()
+
+
+@pytest.mark.e2e
 def test_get_path_detail_enriched_resources():
     """Test GET /api/path/<id> returns enriched resource summaries."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
 
-    list_response = requests.get(f"{BASE_URL}/api/path", headers=headers)
+    list_response = requests.get(
+        f"{BASE_URL}/api/path",
+        headers={**headers, "size": "100"},
+    )
     assert list_response.status_code == 200, _err(list_response, 200)
 
     paths = list_response.json()
