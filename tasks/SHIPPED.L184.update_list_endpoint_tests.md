@@ -1,6 +1,6 @@
 # L184 – Update list endpoint tests for Get List adoption
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L181, L182, L183  
 **Description**: Final test sweep after api-utils 0.5.0 list adoption: ensure route mocks match new service kwargs across list endpoints; E2E tests assert header pagination and filter query params on resource and path lists; fix any remaining failures from breaking path pagination.
@@ -67,4 +67,13 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary of changes**
+- Final test sweep: all route mocks use 0.5.0 `(token, breadcrumb, offset, size, filters, sort_by)` signature.
+- E2E coverage for resource/path pagination, name/status filters, and aggregation list bootstrap with `size=100`.
+- Formatted `test/e2e/test_aggregation.py`.
+
+**Test results**
+- `pipenv run test`: 46 passed
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container` + `pipenv run api` + `pipenv run e2e`: 26 passed

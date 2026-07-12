@@ -79,7 +79,10 @@ def test_get_resources_with_name_filter():
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
 
-    list_response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
     assert list_response.status_code == 200, _err(list_response, 200)
     resources = list_response.json()
     if not resources or not resources[0].get("name"):
@@ -99,12 +102,33 @@ def test_get_resources_with_name_filter():
 
 
 @pytest.mark.e2e
+def test_get_resources_with_status_filter():
+    """Test GET /api/resource with status in_list filter query param."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+        params={"status": "active"},
+    )
+    assert response.status_code == 200, _err(response, 200)
+    resources = response.json()
+    assert isinstance(resources, list)
+    for resource in resources:
+        assert resource.get("status") == "active"
+
+
+@pytest.mark.e2e
 def test_get_resource_detail():
     """Test GET /api/resource/<id> returns composite detail."""
     token = get_auth_token()
     headers = {"Authorization": f"Bearer {token}"}
 
-    list_response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
     assert list_response.status_code == 200, _err(list_response, 200)
     resources = list_response.json()
     if not resources:

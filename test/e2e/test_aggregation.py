@@ -92,9 +92,9 @@ def test_get_aggregation_detail_notes_match_count():
         )
         assert resource_detail.status_code == 200, _err(resource_detail, 200)
         resource_notes = resource_detail.json().get("notes") or []
-        assert len(resource_notes) == len(notes), (
-            "Resource and aggregation endpoints should return the same note count"
-        )
+        assert len(resource_notes) == len(
+            notes
+        ), "Resource and aggregation endpoints should return the same note count"
         verified = True
         break
     if not verified:
