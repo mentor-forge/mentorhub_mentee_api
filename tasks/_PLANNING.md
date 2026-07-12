@@ -12,7 +12,7 @@ This folder contains coding tasks that an orchestration agent can execute, based
 - ../mentorhub/DeveloperEdition/standards/api_standards.md
 - ../mentorhub_api_utils/README.md
 - ./README.md
-- ./tasks/_ORCHESTRATION.md
+- ./tasks/_ORCHESTRATE.md
 - ./tasks/_PLANNING.md (this file)
 
 ## Task File Layout
