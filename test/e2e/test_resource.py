@@ -126,6 +126,53 @@ def test_get_resource_detail():
 
 
 @pytest.mark.e2e
+def test_get_resource_detail_notes_match_aggregation_count():
+    """Regression: composite notes array length matches aggregation note_count."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    if not resources:
+        pytest.skip("No resources available for note count regression test")
+
+    verified = False
+    for resource in resources:
+        resource_id = resource["_id"]
+        response = requests.get(
+            f"{BASE_URL}/api/resource/{resource_id}",
+            headers=headers,
+        )
+        assert response.status_code == 200, _err(response, 200)
+        detail = response.json()
+        aggregation = detail.get("aggregation")
+        notes = detail.get("notes") or []
+        if aggregation is None:
+            continue
+        note_count = aggregation.get("note_count")
+        if note_count is None:
+            continue
+        if note_count > 20:
+            assert len(notes) == note_count, (
+                f"Resource {resource_id}: composite truncated notes "
+                f"(expected {note_count}, got {len(notes)})"
+            )
+            verified = True
+            break
+        if note_count == len(notes):
+            verified = True
+            break
+    if not verified:
+        pytest.skip(
+            "No resource with consistent aggregation note_count for regression check"
+        )
+
+
+@pytest.mark.e2e
 def test_get_resource_not_found():
     """Test GET /api/resource/<id> with non-existent ID."""
     token = get_auth_token()

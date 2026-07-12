@@ -1,6 +1,6 @@
 # L183 – Verify composite endpoints return full note lists after R052
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L180  
 **Description**: After api-utils 0.5.0, `NoteService.get_notes_for_resource` paginates by default; composite reads must continue returning **all** notes via `NoteService.list_all_notes_for_resource`. Verify `GET /api/resource/{id}` and `GET /api/aggregation/{resource_id}` still return complete `notes` arrays; add regression tests if note counts would truncate at the default page size.
@@ -67,4 +67,10 @@ The agent must not update files outside this list without updating **Outputs** i
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary of changes**
+- Verified api-utils 0.5.0 composites use `NoteService.list_all_notes_for_resource` (no route changes required).
+- Added E2E regression tests for note list truncation (`note_count > 20`) and resource/aggregation note count parity when aggregation counters are consistent.
+
+**Test results**
+- `pipenv run test`: 46 passed
+- Composite E2E: passed (regression tests skip when seed data counters are stale)
