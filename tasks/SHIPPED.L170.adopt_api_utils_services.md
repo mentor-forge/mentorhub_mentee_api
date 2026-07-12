@@ -1,6 +1,6 @@
 # L170 – Adopt shared api_utils services and remove local copies
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: `L160_bump_api_utils_0_4_0`  
 **Description**: Delete duplicate domain service modules under `src/services/` and switch routes and tests to import service classes from `api_utils.services` (or top-level `api_utils`).
@@ -110,4 +110,11 @@ The agent must not update files outside this list unless a stray `src.services` 
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Shipped (2026-07-12).** Removed all six local service modules and duplicate service unit tests. Route handlers now import from `api_utils.services`. Updated `README.md` project structure to reflect shared services dependency.
+
+**Test results**
+- `pipenv run test`: 41 passed (route + server tests; service unit tests removed as duplicates of api_utils coverage)
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container` + `pipenv run e2e`: 19 passed against containerized API
+- No remaining `src.services` references in `src/` or `test/`
