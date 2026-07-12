@@ -1,6 +1,6 @@
 # L160 – Bump api-utils to 0.4.0
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Pin `api-utils==0.4.0` in the Pipfile and refresh the lockfile so this API resolves the published package that exports shared domain services from `api_utils.services`.
@@ -49,4 +49,12 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Shipped (2026-07-12).** Bumped `Pipfile` pin from `api-utils==0.3.0` to `==0.4.0` and regenerated `Pipfile.lock` via `pipenv lock` + `pipenv run install`.
+
+**Test results**
+- Import check: all six service classes and `TEMPLATE_JOURNEY_ID` resolve from `api_utils`
+- `pipenv run test`: 96 passed
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container`: pass (image builds with `api-utils==0.4.0`)
+- `pipenv run api` + `pipenv run e2e`: 19 passed
