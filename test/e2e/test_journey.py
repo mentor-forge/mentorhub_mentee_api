@@ -18,15 +18,15 @@ def _err(response, expected):
 @pytest.mark.e2e
 def test_get_my_journey_endpoint():
     """GET /api/journey returns the token owner's journey document."""
-    token = get_auth_token(profile_id="E00000000000000000000001")
+    token = get_auth_token(profile_id="e00000000000000000000001")
     headers = {"Authorization": f"Bearer {token}"}
 
     response = requests.get(f"{BASE_URL}/api/journey", headers=headers)
     assert response.status_code == 200, _err(response, 200)
 
     data = response.json()
-    assert data["_id"] == "E00000000000000000000001"
-    assert data.get("profile_id") == "E00000000000000000000001"
+    assert data["_id"] == "e00000000000000000000001"
+    assert data.get("profile_id") == "e00000000000000000000001"
     assert "created" in data
     assert "saved" in data
     assert "library" in data
@@ -37,7 +37,7 @@ def test_get_my_journey_endpoint():
 @pytest.mark.e2e
 def test_get_my_journey_idempotent():
     """Repeated GET /api/journey returns the same journey _id."""
-    profile_id = "E00000000000000000000002"
+    profile_id = "e00000000000000000000002"
     token = get_auth_token(profile_id=profile_id)
     headers = {"Authorization": f"Bearer {token}"}
 
