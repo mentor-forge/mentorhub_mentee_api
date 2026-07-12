@@ -25,6 +25,7 @@ class TestPathRoutes(unittest.TestCase):
             "at_time": "sometime",
             "correlation_id": "correlation_ID",
         }
+        self.default_sort = [("name", 1), ("_id", 1)]
 
     @patch("src.routes.path_routes.create_flask_token")
     @patch("src.routes.path_routes.create_flask_breadcrumb")
@@ -35,7 +36,7 @@ class TestPathRoutes(unittest.TestCase):
         mock_create_breadcrumb,
         mock_create_token,
     ):
-        """Test GET /api/path for successful response."""
+        """Test GET /api/path for successful paginated array response."""
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
 
@@ -53,7 +54,84 @@ class TestPathRoutes(unittest.TestCase):
         mock_get_paths.assert_called_once_with(
             self.mock_token,
             self.mock_breadcrumb,
+            0,
+            20,
+            {},
+            self.default_sort,
         )
+
+    @patch("src.routes.path_routes.create_flask_token")
+    @patch("src.routes.path_routes.create_flask_breadcrumb")
+    @patch("src.routes.path_routes.PathService.get_paths")
+    def test_get_paths_with_pagination_headers(
+        self,
+        mock_get_paths,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/path with offset/size headers."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_paths.return_value = [{"_id": "123", "name": "path1"}]
+
+        response = self.client.get(
+            "/api/path",
+            headers={"offset": "2", "size": "5"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_paths.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            2,
+            5,
+            {},
+            self.default_sort,
+        )
+
+    @patch("src.routes.path_routes.create_flask_token")
+    @patch("src.routes.path_routes.create_flask_breadcrumb")
+    @patch("src.routes.path_routes.PathService.get_paths")
+    def test_get_paths_with_name_filter(
+        self,
+        mock_get_paths,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/path passes name filter from query params."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_paths.return_value = []
+
+        response = self.client.get("/api/path?name=onboard")
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_paths.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            0,
+            20,
+            {"name": "onboard"},
+            self.default_sort,
+        )
+
+    @patch("src.routes.path_routes.create_flask_token")
+    @patch("src.routes.path_routes.create_flask_breadcrumb")
+    @patch("src.routes.path_routes.PathService.get_paths")
+    def test_get_paths_invalid_pagination_returns_400(
+        self,
+        mock_get_paths,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/path returns 400 for invalid offset header."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+
+        response = self.client.get("/api/path", headers={"offset": "-1"})
+
+        self.assertEqual(response.status_code, 400)
+        mock_get_paths.assert_not_called()
 
     @patch("src.routes.path_routes.create_flask_token")
     @patch("src.routes.path_routes.create_flask_breadcrumb")

@@ -25,6 +25,7 @@ class TestResourceRoutes(unittest.TestCase):
             "at_time": "sometime",
             "correlation_id": "correlation_ID",
         }
+        self.default_sort = [("name", 1), ("_id", 1)]
 
     @patch("src.routes.resource_routes.create_flask_token")
     @patch("src.routes.resource_routes.create_flask_breadcrumb")
@@ -53,8 +54,10 @@ class TestResourceRoutes(unittest.TestCase):
         mock_get_resources.assert_called_once_with(
             self.mock_token,
             self.mock_breadcrumb,
-            offset=0,
-            size=20,
+            0,
+            20,
+            {},
+            self.default_sort,
         )
 
     @patch("src.routes.resource_routes.create_flask_token")
@@ -82,9 +85,57 @@ class TestResourceRoutes(unittest.TestCase):
         mock_get_resources.assert_called_once_with(
             self.mock_token,
             self.mock_breadcrumb,
-            offset=5,
-            size=10,
+            5,
+            10,
+            {},
+            self.default_sort,
         )
+
+    @patch("src.routes.resource_routes.create_flask_token")
+    @patch("src.routes.resource_routes.create_flask_breadcrumb")
+    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    def test_get_resources_with_filter_and_sort_query_params(
+        self,
+        mock_get_resources,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/resource passes filters and sort_by from query params."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_resources.return_value = []
+
+        response = self.client.get(
+            "/api/resource?name=guide&status=active&sort_by=description&order=desc"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_resources.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            0,
+            20,
+            {"name": "guide", "status": ["active"]},
+            [("description", -1), ("_id", -1)],
+        )
+
+    @patch("src.routes.resource_routes.create_flask_token")
+    @patch("src.routes.resource_routes.create_flask_breadcrumb")
+    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    def test_get_resources_invalid_pagination_returns_400(
+        self,
+        mock_get_resources,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/resource returns 400 for invalid size header."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+
+        response = self.client.get("/api/resource", headers={"size": "101"})
+
+        self.assertEqual(response.status_code, 400)
+        mock_get_resources.assert_not_called()
 
     @patch("src.routes.resource_routes.create_flask_token")
     @patch("src.routes.resource_routes.create_flask_breadcrumb")

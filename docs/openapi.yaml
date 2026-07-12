@@ -128,37 +128,6 @@ paths:
                 $ref: '#/components/schemas/Error'
         '500':
           $ref: '#/components/responses/InternalError'
-    post:
-      tags:
-        - Journey
-      summary: Create a new Journey document
-      description: Create a new Journey document (requires staff or admin role)
-      operationId: createJourney
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/JourneyInput'
-      responses:
-        '201':
-          description: Journey created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                    pattern: '^[0-9a-fA-F]{24}$'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalError'
 
   /api/journey/advance/{resource_id}:
     patch:
@@ -389,6 +358,15 @@ paths:
         - `offset` — zero-based start index (default `0`)
         - `size` — page size (default `20`, maximum `100`)
 
+        Optional query filters:
+        - `name` — case-insensitive substring match on `name`
+        - `description` — case-insensitive substring match on `description`
+        - `status` — comma-separated values matched with `$in` (e.g. `active,draft`)
+
+        Optional sort query params:
+        - `sort_by` — whitelisted field (`name`, `description`, `status`, `created.at_time`, `saved.at_time`; default `name`)
+        - `order` — `asc` or `desc` (default `asc`)
+
         Non-`admin` callers receive only resources whose `status` is not `archived`.
         Users with the `admin` role may see all resources, including `archived`.
       operationId: getResources
@@ -414,6 +392,44 @@ paths:
             maximum: 100
             default: 20
             example: 20
+        - name: name
+          in: query
+          required: false
+          description: Case-insensitive substring filter on resource name
+          schema:
+            type: string
+            example: onboarding
+        - name: description
+          in: query
+          required: false
+          description: Case-insensitive substring filter on resource description
+          schema:
+            type: string
+            example: guide
+        - name: status
+          in: query
+          required: false
+          description: Comma-separated status values (e.g. active,draft)
+          schema:
+            type: string
+            example: active
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
+          schema:
+            type: string
+            default: name
+            example: name
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+            example: asc
       responses:
         '200':
           description: Successfully retrieved Resources
@@ -433,14 +449,69 @@ paths:
     get:
       tags:
         - Path
-      summary: Get all Path documents
+      summary: Get Path documents
       description: |
-        Retrieve all Path documents (read-only), sorted by `name` ascending.
+        Retrieve a paginated array of Path documents (read-only).
 
-        Returns a plain JSON array — no pagination or infinite-scroll parameters.
+        Pagination is controlled by request headers:
+        - `offset` — zero-based start index (default `0`)
+        - `size` — page size (default `20`, maximum `100`)
+
+        Optional query filters:
+        - `name` — case-insensitive substring match on `name`
+
+        Optional sort query params:
+        - `sort_by` — whitelisted field (`name`; default `name`)
+        - `order` — `asc` or `desc` (default `asc`)
+
+        Returns a plain JSON array (one page). Clients needing the full collection must iterate with `offset`/`size` headers.
       operationId: getPaths
       security:
         - bearerAuth: []
+      parameters:
+        - name: offset
+          in: header
+          required: false
+          description: Zero-based index of the first path to return
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+        - name: size
+          in: header
+          required: false
+          description: Number of paths to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: name
+          in: query
+          required: false
+          description: Case-insensitive substring filter on path name
+          schema:
+            type: string
+            example: onboarding
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (name)
+          schema:
+            type: string
+            default: name
+            example: name
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+            example: asc
       responses:
         '200':
           description: Successfully retrieved Paths
@@ -450,6 +521,8 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Path'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -751,35 +824,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/JourneyNextTopic'
-
-    JourneyInput:
-      type: object
-      description: Input for creating a Journey document
-      properties:
-        status:
-          type: string
-          description: Journey status
-          enum:
-            - active
-            - archived
-          example: active
-        library:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyLibraryItem'
-        now:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyNowItem'
-        next:
-          type: array
-          items:
-            $ref: '#/components/schemas/JourneyNextModule'
-        later:
-          type: array
-          items:
-            type: string
-            pattern: '^[0-9a-fA-F]{24}$'
 
     JourneyUpdate:
       type: object

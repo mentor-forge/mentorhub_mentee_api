@@ -56,30 +56,6 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
-    @patch("src.routes.journey_routes.JourneyService.create_journey")
-    @patch("src.routes.journey_routes.JourneyService.get_journey")
-    def test_create_journey_success(
-        self,
-        mock_get_journey,
-        mock_create_journey,
-        mock_create_breadcrumb,
-        mock_create_token,
-    ):
-        mock_create_token.return_value = self.mock_token
-        mock_create_breadcrumb.return_value = self.mock_breadcrumb
-        mock_create_journey.return_value = "123"
-        mock_get_journey.return_value = {"_id": "123", "status": "active"}
-
-        response = self.client.post(
-            "/api/journey",
-            json={"status": "active"},
-        )
-
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json["_id"], "123")
-
-    @patch("src.routes.journey_routes.create_flask_token")
-    @patch("src.routes.journey_routes.create_flask_breadcrumb")
     @patch("src.routes.journey_routes.JourneyService.update_journey")
     def test_update_journey_success(
         self, mock_update_journey, mock_create_breadcrumb, mock_create_token
@@ -154,13 +130,10 @@ class TestJourneyRoutes(unittest.TestCase):
         mock_complete.assert_called_once()
 
     @patch("src.routes.journey_routes.create_flask_token")
-    def test_create_journey_unauthorized(self, mock_create_token):
+    def test_get_my_journey_unauthorized(self, mock_create_token):
         mock_create_token.side_effect = HTTPUnauthorized("Invalid token")
 
-        response = self.client.post(
-            "/api/journey",
-            json={"status": "active"},
-        )
+        response = self.client.get("/api/journey")
 
         self.assertEqual(response.status_code, 401)
         self.assertIn("error", response.json)
