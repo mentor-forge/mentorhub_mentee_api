@@ -1,6 +1,6 @@
 # L180 – Bump api-utils to 0.5.0
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Pin `api-utils==0.5.0` in the Pipfile and refresh the lockfile so this API resolves the published package with standardized Get List utilities (`parse_list_request`, paginated `PathService.get_paths`, filter/sort support on `ResourceService.get_resources`, and composite full-note fetch via `NoteService.list_all_notes_for_resource`).
@@ -64,4 +64,14 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary of changes**
+- Bumped `Pipfile` pin from `api-utils==0.4.0` to `==0.5.0`.
+- Updated `Pipfile.lock` with 0.5.0 hash; installed via CodeArtifact mirror.
+
+**Test results**
+- Import check: `parse_list_request`, `RESOURCE_LIST_*`, `PATH_LIST_*`, service classes — ok
+- `pipenv run test`: 41 passed
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container`: pass
+- `pipenv run api` + `pipenv run e2e`: 19 passed
