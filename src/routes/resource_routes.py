@@ -10,14 +10,16 @@ from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from api_utils.services import ResourceService
+from api_utils.flask_utils.list_request import parse_list_request
+from api_utils.services.resource_service import (
+    RESOURCE_LIST_FILTERS,
+    RESOURCE_LIST_ORDER,
+    ResourceService,
+)
 
 import logging
 
 logger = logging.getLogger(__name__)
-
-DEFAULT_OFFSET = 0
-DEFAULT_SIZE = 20
 
 
 def create_resource_routes():
@@ -39,20 +41,27 @@ def create_resource_routes():
             offset: Zero-based start index (default: 0)
             size: Page size (default: 20, max: 100)
 
+        Query params:
+            name, description, status: optional filters
+            sort_by, order: optional sort (default name asc)
+
         Returns:
             JSON array of resource documents
         """
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
 
-        offset = request.headers.get("offset", DEFAULT_OFFSET, type=int)
-        size = request.headers.get("size", DEFAULT_SIZE, type=int)
+        offset, size, filters, sort_by = parse_list_request(
+            request, RESOURCE_LIST_FILTERS, RESOURCE_LIST_ORDER
+        )
 
         resources = ResourceService.get_resources(
             token,
             breadcrumb,
-            offset=offset,
-            size=size,
+            offset,
+            size,
+            filters,
+            sort_by,
         )
 
         logger.info(

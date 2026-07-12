@@ -389,6 +389,15 @@ paths:
         - `offset` — zero-based start index (default `0`)
         - `size` — page size (default `20`, maximum `100`)
 
+        Optional query filters:
+        - `name` — case-insensitive substring match on `name`
+        - `description` — case-insensitive substring match on `description`
+        - `status` — comma-separated values matched with `$in` (e.g. `active,draft`)
+
+        Optional sort query params:
+        - `sort_by` — whitelisted field (`name`, `description`, `status`, `created.at_time`, `saved.at_time`; default `name`)
+        - `order` — `asc` or `desc` (default `asc`)
+
         Non-`admin` callers receive only resources whose `status` is not `archived`.
         Users with the `admin` role may see all resources, including `archived`.
       operationId: getResources
@@ -414,6 +423,44 @@ paths:
             maximum: 100
             default: 20
             example: 20
+        - name: name
+          in: query
+          required: false
+          description: Case-insensitive substring filter on resource name
+          schema:
+            type: string
+            example: onboarding
+        - name: description
+          in: query
+          required: false
+          description: Case-insensitive substring filter on resource description
+          schema:
+            type: string
+            example: guide
+        - name: status
+          in: query
+          required: false
+          description: Comma-separated status values (e.g. active,draft)
+          schema:
+            type: string
+            example: active
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (name, description, status, created.at_time, saved.at_time)
+          schema:
+            type: string
+            default: name
+            example: name
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+            example: asc
       responses:
         '200':
           description: Successfully retrieved Resources

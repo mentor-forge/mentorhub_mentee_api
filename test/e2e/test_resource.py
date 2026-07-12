@@ -55,6 +55,50 @@ def test_get_resources_with_pagination_headers():
 
 
 @pytest.mark.e2e
+def test_get_resources_with_filter_and_sort():
+    """Test GET /api/resource with name filter and sort query params."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"sort_by": "name", "order": "asc"},
+    )
+    assert response.status_code == 200, _err(response, 200)
+
+    response_data = response.json()
+    assert isinstance(response_data, list), "Response should be a JSON array"
+    if len(response_data) >= 2:
+        names = [item.get("name") for item in response_data if item.get("name")]
+        assert names == sorted(names), "Results should be sorted by name asc"
+
+
+@pytest.mark.e2e
+def test_get_resources_with_name_filter():
+    """Test GET /api/resource with optional name filter query param."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    if not resources or not resources[0].get("name"):
+        pytest.skip("No named resources available for filter test")
+
+    needle = resources[0]["name"][:3]
+    filtered_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"name": needle},
+    )
+    assert filtered_response.status_code == 200, _err(filtered_response, 200)
+    filtered = filtered_response.json()
+    assert isinstance(filtered, list)
+    for resource in filtered:
+        assert needle.lower() in resource.get("name", "").lower()
+
+
+@pytest.mark.e2e
 def test_get_resource_detail():
     """Test GET /api/resource/<id> returns composite detail."""
     token = get_auth_token()

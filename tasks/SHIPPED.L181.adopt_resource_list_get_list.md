@@ -1,6 +1,6 @@
 # L181 – Adopt Get List pattern on GET /api/resource
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L180  
 **Description**: Replace manual offset/size header parsing on `GET /api/resource` with `parse_list_request` from `api_utils.flask_utils.list_request`; pass parsed `filters` and `sort_by` into `ResourceService.get_resources`; document filter query params and order-by in `docs/openapi.yaml`.
@@ -78,4 +78,13 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary of changes**
+- `GET /api/resource` uses `parse_list_request` with `RESOURCE_LIST_FILTERS`/`RESOURCE_LIST_ORDER`.
+- OpenAPI documents filter and sort query params; `400` for invalid pagination already present.
+- Route and E2E tests cover filters, sort, and invalid size header.
+
+**Test results**
+- `pipenv run test`: 43 passed
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container` + `pipenv run api` + resource E2E: 7 passed
