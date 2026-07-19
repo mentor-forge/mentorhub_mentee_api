@@ -358,10 +358,14 @@ paths:
         - `offset` — zero-based start index (default `0`)
         - `size` — page size (default `20`, maximum `100`)
 
-        Optional query filters:
+        Optional query filters (multiple filters are ANDed):
         - `name` — case-insensitive substring match on `name`
         - `description` — case-insensitive substring match on `description`
         - `status` — comma-separated values matched with `$in` (e.g. `active,draft`)
+        - `url` — case-insensitive substring match on `url`
+        - `interests` — comma-separated values matched with `$in` on the `interests` array (any-element match)
+        - `technologies` — comma-separated values matched with `$in` on the `technologies` array
+        - `skill_level` — comma-separated values matched with `$in` on `skill_level`
 
         Optional sort query params:
         - `sort_by` — whitelisted field (`name`, `description`, `status`, `created.at_time`, `saved.at_time`; default `name`)
@@ -413,6 +417,34 @@ paths:
           schema:
             type: string
             example: active
+        - name: url
+          in: query
+          required: false
+          description: Case-insensitive substring filter on resource url
+          schema:
+            type: string
+            example: github.com
+        - name: interests
+          in: query
+          required: false
+          description: Comma-separated interest values matched with $in on the interests array (e.g. api,sre)
+          schema:
+            type: string
+            example: api
+        - name: technologies
+          in: query
+          required: false
+          description: Comma-separated technology values matched with $in on the technologies array (e.g. Python,React)
+          schema:
+            type: string
+            example: Python
+        - name: skill_level
+          in: query
+          required: false
+          description: Comma-separated skill_level values (e.g. Apprentice,Craftsperson)
+          schema:
+            type: string
+            example: Apprentice
         - name: sort_by
           in: query
           required: false

@@ -120,6 +120,256 @@ def test_get_resources_with_status_filter():
 
 
 @pytest.mark.e2e
+def test_get_resources_with_url_filter():
+    """Test GET /api/resource with optional url contains filter."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    sample = next((r for r in resources if r.get("url")), None)
+    if not sample:
+        pytest.skip("No resources with url available for filter test")
+
+    needle = sample["url"][:8]
+    filtered_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"url": needle},
+    )
+    assert filtered_response.status_code == 200, _err(filtered_response, 200)
+    filtered = filtered_response.json()
+    assert isinstance(filtered, list)
+    assert len(filtered) >= 1
+    for resource in filtered:
+        assert needle.lower() in resource.get("url", "").lower()
+
+    no_match = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"url": "zzz-no-such-url-xyz"},
+    )
+    assert no_match.status_code == 200, _err(no_match, 200)
+    assert no_match.json() == []
+
+
+@pytest.mark.e2e
+def test_get_resources_with_interests_filter():
+    """Test GET /api/resource with interests in_list filter."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    sample = next(
+        (
+            r
+            for r in resources
+            if isinstance(r.get("interests"), list) and r["interests"]
+        ),
+        None,
+    )
+    if not sample:
+        pytest.skip("No resources with interests available for filter test")
+
+    interest = sample["interests"][0]
+    filtered_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"interests": interest},
+    )
+    assert filtered_response.status_code == 200, _err(filtered_response, 200)
+    filtered = filtered_response.json()
+    assert isinstance(filtered, list)
+    assert len(filtered) >= 1
+    for resource in filtered:
+        assert interest in (resource.get("interests") or [])
+
+    no_match = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"interests": "zzz-no-such-interest"},
+    )
+    assert no_match.status_code == 200, _err(no_match, 200)
+    assert no_match.json() == []
+
+
+@pytest.mark.e2e
+def test_get_resources_with_technologies_filter():
+    """Test GET /api/resource with technologies in_list filter."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    sample = next(
+        (
+            r
+            for r in resources
+            if isinstance(r.get("technologies"), list) and r["technologies"]
+        ),
+        None,
+    )
+    if not sample:
+        pytest.skip("No resources with technologies available for filter test")
+
+    technology = sample["technologies"][0]
+    filtered_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"technologies": technology},
+    )
+    assert filtered_response.status_code == 200, _err(filtered_response, 200)
+    filtered = filtered_response.json()
+    assert isinstance(filtered, list)
+    assert len(filtered) >= 1
+    for resource in filtered:
+        assert technology in (resource.get("technologies") or [])
+
+    no_match = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"technologies": "zzz-no-such-tech"},
+    )
+    assert no_match.status_code == 200, _err(no_match, 200)
+    assert no_match.json() == []
+
+
+@pytest.mark.e2e
+def test_get_resources_with_skill_level_filter():
+    """Test GET /api/resource with skill_level in_list filter."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    sample = next((r for r in resources if r.get("skill_level")), None)
+    if not sample:
+        pytest.skip("No resources with skill_level available for filter test")
+
+    skill_level = sample["skill_level"]
+    filtered_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"skill_level": skill_level},
+    )
+    assert filtered_response.status_code == 200, _err(filtered_response, 200)
+    filtered = filtered_response.json()
+    assert isinstance(filtered, list)
+    assert len(filtered) >= 1
+    for resource in filtered:
+        assert resource.get("skill_level") == skill_level
+
+    no_match = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers=headers,
+        params={"skill_level": "zzz-no-such-level"},
+    )
+    assert no_match.status_code == 200, _err(no_match, 200)
+    assert no_match.json() == []
+
+
+@pytest.mark.e2e
+def test_get_resources_empty_multi_field_filters_ok():
+    """Test GET /api/resource with empty multi-field filters does not error."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    unfiltered = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "5"},
+    )
+    assert unfiltered.status_code == 200, _err(unfiltered, 200)
+
+    empty_filtered = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "5"},
+        params={"url": "", "interests": "", "technologies": "", "skill_level": ""},
+    )
+    assert empty_filtered.status_code == 200, _err(empty_filtered, 200)
+    assert isinstance(empty_filtered.json(), list)
+    assert len(empty_filtered.json()) == len(unfiltered.json())
+
+
+@pytest.mark.e2e
+def test_get_resources_multi_field_filter_with_pagination():
+    """Test GET /api/resource combines a multi-field filter with offset/size headers."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "size": "100"},
+    )
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+
+    params = {}
+    sample_url = next((r for r in resources if r.get("url")), None)
+    if sample_url:
+        params["url"] = sample_url["url"][:8]
+    else:
+        sample_tech = next(
+            (
+                r
+                for r in resources
+                if isinstance(r.get("technologies"), list) and r["technologies"]
+            ),
+            None,
+        )
+        if sample_tech:
+            params["technologies"] = sample_tech["technologies"][0]
+        else:
+            sample_interest = next(
+                (
+                    r
+                    for r in resources
+                    if isinstance(r.get("interests"), list) and r["interests"]
+                ),
+                None,
+            )
+            if sample_interest:
+                params["interests"] = sample_interest["interests"][0]
+            else:
+                sample_skill = next(
+                    (r for r in resources if r.get("skill_level")), None
+                )
+                if sample_skill:
+                    params["skill_level"] = sample_skill["skill_level"]
+                else:
+                    pytest.skip(
+                        "No resources with url/interests/technologies/skill_level "
+                        "for combined filter pagination test"
+                    )
+
+    response = requests.get(
+        f"{BASE_URL}/api/resource",
+        headers={**headers, "offset": "0", "size": "3"},
+        params=params,
+    )
+    assert response.status_code == 200, _err(response, 200)
+    filtered = response.json()
+    assert isinstance(filtered, list)
+    assert len(filtered) <= 3
+
+
+@pytest.mark.e2e
 def test_get_resource_detail():
     """Test GET /api/resource/<id> returns composite detail."""
     token = get_auth_token()

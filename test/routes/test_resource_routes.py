@@ -122,6 +122,105 @@ class TestResourceRoutes(unittest.TestCase):
     @patch("src.routes.resource_routes.create_flask_token")
     @patch("src.routes.resource_routes.create_flask_breadcrumb")
     @patch("src.routes.resource_routes.ResourceService.get_resources")
+    def test_get_resources_with_multi_field_filters(
+        self,
+        mock_get_resources,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/resource passes url/interests/technologies/skill_level filters."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_resources.return_value = []
+
+        response = self.client.get(
+            "/api/resource"
+            "?url=example"
+            "&interests=a,b"
+            "&technologies=x"
+            "&skill_level=beginner"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_resources.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            0,
+            20,
+            {
+                "url": "example",
+                "interests": ["a", "b"],
+                "technologies": ["x"],
+                "skill_level": ["beginner"],
+            },
+            self.default_sort,
+        )
+
+    @patch("src.routes.resource_routes.create_flask_token")
+    @patch("src.routes.resource_routes.create_flask_breadcrumb")
+    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    def test_get_resources_empty_multi_field_filters_omitted(
+        self,
+        mock_get_resources,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/resource omits empty multi-field filter query params."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_resources.return_value = []
+
+        response = self.client.get(
+            "/api/resource?url=&interests=&technologies=&skill_level="
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_resources.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            0,
+            20,
+            {},
+            self.default_sort,
+        )
+
+    @patch("src.routes.resource_routes.create_flask_token")
+    @patch("src.routes.resource_routes.create_flask_breadcrumb")
+    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    def test_get_resources_combined_multi_field_filter_and_pagination(
+        self,
+        mock_get_resources,
+        mock_create_breadcrumb,
+        mock_create_token,
+    ):
+        """Test GET /api/resource combines new filters with existing filters and pagination."""
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_resources.return_value = []
+
+        response = self.client.get(
+            "/api/resource?name=guide&url=example&technologies=Python&status=active",
+            headers={"offset": "3", "size": "7"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_get_resources.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            3,
+            7,
+            {
+                "name": "guide",
+                "url": "example",
+                "technologies": ["Python"],
+                "status": ["active"],
+            },
+            self.default_sort,
+        )
+
+    @patch("src.routes.resource_routes.create_flask_token")
+    @patch("src.routes.resource_routes.create_flask_breadcrumb")
+    @patch("src.routes.resource_routes.ResourceService.get_resources")
     def test_get_resources_invalid_pagination_returns_400(
         self,
         mock_get_resources,
