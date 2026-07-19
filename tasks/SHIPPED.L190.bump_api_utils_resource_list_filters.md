@@ -1,6 +1,6 @@
 # L190 – Bump api-utils to 0.5.1 for Resource list multi-field filters
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Pin and install `api-utils==0.5.1` so `RESOURCE_LIST_FILTERS` includes `url`, `interests`, `technologies`, and `skill_level`, and `parse_list_request` on `GET /api/resource` accepts those query params without route-layer filter wiring changes.
@@ -81,4 +81,22 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Plan**
+1. Bump `Pipfile` `api-utils` pin from `==0.5.0` to `==0.5.1` (CodeArtifact index unchanged).
+2. Run `mh` for CodeArtifact auth, then lock + `pipenv run install` to refresh `Pipfile.lock`.
+3. If `0.5.1` does not resolve from CodeArtifact: set Status Blocked, rename to BLOCKED.L190..., stop.
+4. Verify `RESOURCE_LIST_FILTERS` includes name/description/status/url/interests/technologies/skill_level.
+5. Run test, lint, build, container, api, e2e per Testing Expectations.
+6. On success: update notes, Status Shipped, rename to SHIPPED.L190..., commit Pipfile/Pipfile.lock/task file, push.
+
+**Summary of changes**
+- Bumped `Pipfile` pin from `api-utils==0.5.0` to `==0.5.1`.
+- Updated `Pipfile.lock` to resolve `api-utils==0.5.1` from CodeArtifact (`pipenv lock` then `pipenv run install`).
+
+**Test results**
+- Import / filter-spec assert: `RESOURCE_LIST_FILTERS` includes name, description, status, url, interests, technologies, skill_level — ok (`api-utils` 0.5.1 installed)
+- `pipenv run test`: 45 passed, 26 deselected
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container`: pass (image builds with `api-utils==0.5.1`)
+- `pipenv run api` + `pipenv run e2e`: 26 passed, 45 deselected
