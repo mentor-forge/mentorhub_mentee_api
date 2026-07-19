@@ -1,6 +1,6 @@
 # L191 – Document Resource list multi-field search filters
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L190  
 **Description**: Document optional `url`, `interests`, `technologies`, and `skill_level` query filters on `GET /api/resource` in `docs/openapi.yaml` (and the route docstring), matching `RESOURCE_LIST_FILTERS` from `api-utils==0.5.1`. Clarify that multiple filters are ANDed. Leave pagination headers, sort, and existing `name` / `description` / `status` behavior unchanged.
@@ -71,4 +71,18 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Plan**
+1. Update `docs/openapi.yaml` `GET /api/resource`: add `url`, `interests`, `technologies`, `skill_level` to the operation description (AND composition) and parameters section, mirroring `name`/`description`/`status` style.
+2. Update list-route docstring in `src/routes/resource_routes.py` query-param list only.
+3. Run spec validation, lint, unit tests, build, then container/api and curl the served OpenAPI.
+4. Mark Shipped, rename task file, commit, push.
+
+**Summary**
+Documented optional `url`, `interests`, `technologies`, and `skill_level` query filters on `GET /api/resource` in OpenAPI (description + parameters) with AND composition; updated list-route docstring query-param list. No runtime filter changes.
+
+**Test results**
+- Spec validation: OK (params include url, interests, technologies, skill_level; ANDed documented). Used system `python3` + PyYAML because pipenv env lacks `yaml`.
+- Lint: pass (25 files unchanged)
+- Unit tests: 45 passed, 26 deselected
+- Build: pass
+- Packaging: `container` + `api` OK; served `/docs/openapi.yaml` includes all four new params

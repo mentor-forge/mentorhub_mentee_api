@@ -42,7 +42,7 @@ def create_resource_routes():
             size: Page size (default: 20, max: 100)
 
         Query params:
-            name, description, status: optional filters
+            name, description, status, url, interests, technologies, skill_level: optional filters
             sort_by, order: optional sort (default name asc)
 
         Returns:
