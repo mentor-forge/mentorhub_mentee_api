@@ -1,6 +1,6 @@
 # L192 – Test Resource list multi-field search filters
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L191  
 **Description**: Add route unit tests and E2E coverage for the new `GET /api/resource` query filters (`url`, `interests`, `technologies`, `skill_level`) provided by `api-utils==0.5.1`: empty/omitted, match, no-match, and combined filters with offset/size pagination headers.
@@ -71,4 +71,20 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Plan**
+1. Extend `test/routes/test_resource_routes.py` with mock coverage asserting `get_resources` kwargs for `url` / `interests` / `technologies` / `skill_level` (present → parsed shape; empty/omitted → key absent), plus one combined case with existing filters and `offset`/`size` headers.
+2. Extend `test/e2e/test_resource.py` following the `name` filter seed-data pattern: load resources, skip if field missing, assert match/no-match and at least one filter + pagination header combo.
+3. Run unit/lint/build, then db/dev/e2e and container/api/e2e; document any seed-data gaps.
+4. Mark Shipped, rename task file, commit, push.
+
+**Summary**
+- Route unit tests: present multi-field filters → expected `filters` kwargs; empty params omitted; combined with `name`/`status` + pagination headers.
+- E2E: match/no-match for `url`, `interests`, `technologies`, `skill_level`; empty filters preserve list length; filter + `offset`/`size` combo.
+- **Seed-data gaps**: none — all four new-filter E2E cases ran against seed data (no skips).
+
+**Test results**
+- `pipenv run test` — 48 passed, 32 deselected
+- `pipenv run lint` — pass (after black on `test/e2e/test_resource.py`)
+- `pipenv run build` — pass
+- Dev: `pipenv run db` + `dev` + `e2e` — 32 passed
+- Packaging: `pipenv run container` + `api` + `e2e` — 32 passed
