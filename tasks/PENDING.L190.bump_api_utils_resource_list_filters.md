@@ -1,27 +1,34 @@
-# L190 – Bump api-utils for Resource list multi-field filters
+# L190 – Bump api-utils to 0.5.1 for Resource list multi-field filters
 
 **Status**: Pending  
 **Type**: Feature  
 **Depends On**: none  
-**Description**: Pin and install the published `api-utils` release that extends `RESOURCE_LIST_FILTERS` with `url`, `interests`, `technologies`, and `skill_level`, so `parse_list_request` on `GET /api/resource` accepts those query params without route-layer filter wiring changes.
+**Description**: Pin and install `api-utils==0.5.1` so `RESOURCE_LIST_FILTERS` includes `url`, `interests`, `technologies`, and `skill_level`, and `parse_list_request` on `GET /api/resource` accepts those query params without route-layer filter wiring changes.
 
 ## Context
 
 Always read these files before implementation:
 
 - `../mentorhub/DeveloperEdition/standards/api_standards.md`
-- `../mentorhub_api_utils/README.md` — **Standardized Get List pattern**
+- `../mentorhub_api_utils/README.md` — **Release and publish** (`api-utils==0.5.1`); **Standardized Get List pattern**
 - `README.md`
 - `Pipfile` / `Pipfile.lock` — currently pins `api-utils==0.5.0`
 
 Additional inputs:
 
-- `../mentorhub_api_utils/api_utils/services/resource_service.py` — `RESOURCE_LIST_FILTERS` (source of truth after the upstream change)
-- `tasks/ISSUE.mentorhub_api_utils.extend_resource_list_filters.md` — upstream handoff
+- `../mentorhub_api_utils/api_utils/services/resource_service.py` — `RESOURCE_LIST_FILTERS` on `0.5.1` / `main`
+- `../mentorhub_api_utils/tasks/SHIPPED.R056.extend_resource_list_filters.md`
+- `../mentorhub_api_utils/tasks/SHIPPED.R057.test_resource_list_multi_field_filters.md`
+- `../mentorhub_api_utils/tasks/SHIPPED.R058.bump_patch_resource_list_filters.md`
+- `tasks/ISSUE.mentorhub_api_utils.extend_resource_list_filters.md` — resolved handoff
 - `tasks/SHIPPED.L180.bump_api_utils_0_5_0.md` — prior bump pattern
 - `tasks/SHIPPED.L181.adopt_resource_list_get_list.md` — how this API consumes `RESOURCE_LIST_FILTERS`
 
-**External prerequisite**: `api-utils` must be published to CodeArtifact with `RESOURCE_LIST_FILTERS` extended as:
+**Upstream status**: Filter extension is implemented and merged (`api-utils` `0.5.1` on `main` via R056–R058).
+
+**External prerequisite**: `api-utils==0.5.1` must be available on CodeArtifact (post-merge `tag-release`). Confirm it resolves with `pipenv run install` before starting. If it is not yet published, set **Status** to `Blocked` and stop. (Run `mh` first for CodeArtifact auth.)
+
+Filter keys expected in `0.5.1`:
 
 | Query param | Type | Field |
 |-------------|------|-------|
@@ -30,13 +37,11 @@ Additional inputs:
 | `technologies` | `in_list` | `technologies` |
 | `skill_level` | `in_list` | `skill_level` |
 
-Existing `name` / `description` / `status` entries must remain. Confirm the new version resolves with `pipenv run install` before starting. If it is not yet available, set **Status** to `Blocked` and stop. (Run `mh` first for CodeArtifact auth.)
-
-Use the published version number from the upstream release (expected patch such as `0.5.1` — replace with the actual published version).
+Existing `name` / `description` / `status` entries remain.
 
 ## Goals
 
-- `Pipfile` pins `api-utils` to the published version that includes the new Resource list filters (CodeArtifact index).
+- `Pipfile` pins `api-utils==0.5.1` (CodeArtifact index).
 - `Pipfile.lock` updated via `pipenv run install`.
 - Import / filter-spec check succeeds after install:
   ```python
@@ -53,10 +58,10 @@ Use the published version number from the upstream release (expected patch such 
 Run all commands from the **API repository root**.
 
 - **Install**
-  - `pipenv run install` — resolves the new `api-utils` from CodeArtifact
+  - `pipenv run install` — resolves `api-utils==0.5.1` from CodeArtifact
   - Verify imports and filter keys (assert above)
 - **Unit tests**
-  - `pipenv run test` — existing suite still passes against the new pin before L191–L192
+  - `pipenv run test` — existing suite still passes against `0.5.1` before L191–L192
   - `pipenv run lint`
 - **Build**
   - `pipenv run build`
@@ -69,7 +74,7 @@ Run all commands from the **API repository root**.
 
 Paths are relative to the **API repository root**.
 
-- `Pipfile` — bump `api-utils` version pin to the published release that includes the new filters
+- `Pipfile` — bump `api-utils` version pin to `==0.5.1`
 - `Pipfile.lock` — refreshed via `pipenv run install`
 
 The agent must not update files outside this list.

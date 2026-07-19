@@ -3,7 +3,7 @@
 **Status**: Pending  
 **Type**: Feature  
 **Depends On**: L190  
-**Description**: Document optional `url`, `interests`, `technologies`, and `skill_level` query filters on `GET /api/resource` in `docs/openapi.yaml` (and the route docstring), matching `RESOURCE_LIST_FILTERS` from the bumped api-utils. Clarify that multiple filters are ANDed. Leave pagination headers, sort, and existing `name` / `description` / `status` behavior unchanged.
+**Description**: Document optional `url`, `interests`, `technologies`, and `skill_level` query filters on `GET /api/resource` in `docs/openapi.yaml` (and the route docstring), matching `RESOURCE_LIST_FILTERS` from `api-utils==0.5.1`. Clarify that multiple filters are ANDed. Leave pagination headers, sort, and existing `name` / `description` / `status` behavior unchanged.
 
 ## Context
 
@@ -16,12 +16,12 @@ Always read these files before implementation:
 
 Additional inputs:
 
-- `../mentorhub_api_utils/api_utils/services/resource_service.py` — `RESOURCE_LIST_FILTERS` after L190 bump
+- `../mentorhub_api_utils/api_utils/services/resource_service.py` — `RESOURCE_LIST_FILTERS` in `0.5.1`
 - `src/routes/resource_routes.py` — list route docstring still lists only `name`, `description`, `status`
 - `tasks/SHIPPED.L181.adopt_resource_list_get_list.md` — prior OpenAPI filter documentation pattern
-- `tasks/ISSUE.mentorhub_api_utils.extend_resource_list_filters.md` — original filter contract handoff
+- `tasks/ISSUE.mentorhub_api_utils.extend_resource_list_filters.md` — resolved handoff / confirmed contract
 
-**Filter contract to document** (runtime already provided by api-utils after L190):
+**Filter contract to document** (runtime provided by `api-utils==0.5.1` after L190):
 
 | Query param | Behavior |
 |-------------|----------|

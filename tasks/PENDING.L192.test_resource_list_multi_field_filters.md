@@ -3,7 +3,7 @@
 **Status**: Pending  
 **Type**: Feature  
 **Depends On**: L191  
-**Description**: Add route unit tests and E2E coverage for the new `GET /api/resource` query filters (`url`, `interests`, `technologies`, `skill_level`): empty/omitted, match, no-match, and combined filters with offset/size pagination headers.
+**Description**: Add route unit tests and E2E coverage for the new `GET /api/resource` query filters (`url`, `interests`, `technologies`, `skill_level`) provided by `api-utils==0.5.1`: empty/omitted, match, no-match, and combined filters with offset/size pagination headers.
 
 ## Context
 
@@ -20,9 +20,10 @@ Additional inputs:
 - `test/routes/test_resource_routes.py` — existing filter/sort mock coverage from L181/L184
 - `test/e2e/test_resource.py` — existing `?name=` / `?status=` E2E coverage
 - `tasks/SHIPPED.L184.update_list_endpoint_tests.md` — prior list test sweep pattern
-- `tasks/ISSUE.mentorhub_api_utils.extend_resource_list_filters.md` — filter semantics
+- `../mentorhub_api_utils/tasks/SHIPPED.R057.test_resource_list_multi_field_filters.md` — upstream unit coverage of filter parsing/match
+- `tasks/ISSUE.mentorhub_api_utils.extend_resource_list_filters.md` — resolved filter semantics
 
-**Expected filter parsing** (via `parse_list_request` + `RESOURCE_LIST_FILTERS`):
+**Expected filter parsing** (via `parse_list_request` + `RESOURCE_LIST_FILTERS` from `0.5.1`):
 
 | Query | Parsed `filters` shape (when present) |
 |-------|----------------------------------------|
@@ -32,7 +33,7 @@ Additional inputs:
 | `?skill_level=beginner` | `{"skill_level": ["beginner"]}` |
 | omitted / empty | key absent from `filters` |
 
-Combined filters AND together at the Mongo layer (asserted indirectly via E2E result sets when seed data allows).
+Combined filters AND together at the Mongo layer (asserted indirectly via E2E result sets when seed data allows). Upstream already covers `list_query` / `RESOURCE_LIST_FILTERS` unit behavior in R057; this task covers mentee route wiring and HTTP E2E.
 
 ## Goals
 
