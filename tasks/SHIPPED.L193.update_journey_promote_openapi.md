@@ -1,6 +1,6 @@
 # L193 – Update OpenAPI for Journey promote mutations (later → next)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Contract-first update to `docs/openapi.yaml` for two Journey mutations that copy Path content from `later` into `next`: **Promote Path to Next** (all modules) and **Promote Module to Next** (single module).
@@ -15,7 +15,7 @@ Always read these files before implementation:
 - `docs/openapi.yaml` — existing Journey paths (`GET /api/journey`, `PATCH .../advance`, `PATCH .../complete`, `PATCH /api/journey/{journey_id}`)
 - `tasks/_PLANNING.md` — task layout, configurator schema discovery
 - `tasks/SHIPPED.L110.update_journey_openapi.md` — Journey OpenAPI patterns
-- `tasks/ISSUE.mentorhub_api_utils.journey_promote_mutations.md` — runtime behavior summary
+- `tasks/ISSUE.mentorhub_api_utils.harvest_journey_promote_mutations.md` — runtime behavior summary
 
 Additional inputs:
 
@@ -88,4 +88,11 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Added `PATCH /api/journey/promote/path/{path_id}` (`promoteJourneyPath`) and `PATCH /api/journey/promote/module/{path_id}/{module_name}` (`promoteJourneyModule`) to `docs/openapi.yaml`.
+- Updated Journey tag description to include promote mutations.
+
+**Testing**
+- Confirmed both operations documented with correct parameters and `200` → `Journey` responses; promote paths ordered before `PATCH /api/journey/{journey_id}`.
+- `pipenv run lint`: pass.
+- `pipenv run container`: skipped — AWS SSO token expired (CodeArtifact auth); re-run after `mh` login for packaging verification.

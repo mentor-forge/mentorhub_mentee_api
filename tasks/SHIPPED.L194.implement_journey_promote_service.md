@@ -1,6 +1,6 @@
 # L194 – Implement local JourneyPromoteService (later → next)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L193  
 **Description**: Add `src/services/journey_promote_service.py` with `promote_path_to_next` and `promote_module_to_next` — local implementation to ship before api-utils harvest (see `ISSUE.mentorhub_api_utils.harvest_journey_promote_mutations.md`).
@@ -47,4 +47,11 @@ The agent must not update files outside this list.
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Added `JourneyPromoteService` with `promote_path_to_next` and `promote_module_to_next` in `src/services/journey_promote_service.py`.
+- MongoDB via `MongoIO`; journey resolution via `JourneyService.get_my_journey`; no Event creation.
+
+**Testing**
+- `pipenv run test`: 58 passed (7 promote service tests).
+- `pipenv run lint`: pass.
+- `pipenv run build`: pass.

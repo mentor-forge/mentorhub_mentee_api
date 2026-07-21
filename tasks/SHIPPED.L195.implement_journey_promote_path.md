@@ -1,6 +1,6 @@
 # L195 – Implement PATCH /api/journey/promote/path/{path_id} (later → next, all modules)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L194  
 **Description**: Add `PATCH /api/journey/promote/path/{path_id}` route calling local `JourneyPromoteService.promote_path_to_next`.
@@ -41,4 +41,9 @@ Additional inputs:
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Added `PATCH /api/journey/promote/path/<path_id>` route; registered before `PATCH /<journey_id>`.
+
+**Testing**
+- `test/routes/test_journey_routes.py::test_promote_journey_path_success`: pass.
+- E2E promote-path scenario deferred (no dedicated E2E yet; existing journey E2E unchanged).

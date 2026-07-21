@@ -1,9 +1,9 @@
 # L196 – Implement PATCH /api/journey/promote/module/{path_id}/{module_name} (later → next, single module)
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: L195  
-**Description**: Add `PATCH /api/journey/promote/module/{path_id}/{module_name>` route calling local `JourneyPromoteService.promote_module_to_next`.
+**Description**: Add `PATCH /api/journey/promote/module/{path_id}/{module_name}` route calling local `JourneyPromoteService.promote_module_to_next`.
 
 ## Context
 
@@ -39,4 +39,10 @@ Additional inputs:
 
 ## Execution Notes
 
-_Reserved for the task execution agent._
+**Summary**
+- Added `PATCH /api/journey/promote/module/<path_id>/<module_name>` route.
+
+**Testing**
+- `test_promote_journey_module_success` and `test_promote_journey_module_duplicate`: pass.
+- Full suite: 58 unit tests passed.
+- E2E promote-module scenario deferred.
