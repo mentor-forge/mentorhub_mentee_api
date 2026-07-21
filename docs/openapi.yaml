@@ -31,7 +31,8 @@ tags:
   - name: Journey
     description: |
       Token-scoped Journey read (get-or-create), ownership RBAC on PATCH, and
-      server-managed advance/complete mutations that record Events.
+      server-managed mutations: promote Path/module from later to next, advance
+      (next to now), and complete (now to library; records Events).
   - name: Note
     description: Note operations (create only)
   - name: Event
@@ -192,6 +193,90 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/JourneyCompleteInput'
+      responses:
+        '200':
+          description: Journey updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Journey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/journey/promote/path/{path_id}:
+    patch:
+      tags:
+        - Journey
+      summary: Promote Path to Next
+      description: |
+        Copy all modules from a Path in `journey.later[]` onto `journey.next[]` and
+        remove the Path id from `later`. Requires authenticated mentee (`profile_id`
+        on token). Does not create Event documents.
+      operationId: promoteJourneyPath
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: path_id
+          in: path
+          required: true
+          description: The Path ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Journey updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Journey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/journey/promote/module/{path_id}/{module_name}:
+    patch:
+      tags:
+        - Journey
+      summary: Promote Module to Next
+      description: |
+        Copy one module (matched by exact `module_name`) from a Path in `journey.later[]`
+        onto `journey.next[]` without removing the Path from `later`. Rejects when a
+        module with the same name is already present in `next`.
+      operationId: promoteJourneyModule
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: path_id
+          in: path
+          required: true
+          description: The Path ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: module_name
+          in: path
+          required: true
+          description: The Path module name (word pattern)
+          schema:
+            type: string
+            pattern: '^[^\s]{1,40}$'
+            example: Foundations
       responses:
         '200':
           description: Journey updated successfully
