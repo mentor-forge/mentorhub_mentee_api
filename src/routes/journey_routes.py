@@ -14,7 +14,9 @@ from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
+from api_utils.flask_utils.exceptions import HTTPForbidden
 from api_utils.services import JourneyService
+from src.services.journey_detail_service import JourneyDetailService
 from src.services.journey_promote_service import JourneyPromoteService
 
 import logging
@@ -29,10 +31,10 @@ def create_journey_routes():
     @journey_routes.route("", methods=["GET"])
     @handle_route_exceptions
     def get_my_journey():
-        """GET /api/journey - Return the token owner's journey (get-or-create)."""
+        """GET /api/journey - Return the token owner's journey with embedded profile."""
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        journey = JourneyService.get_my_journey(token, breadcrumb)
+        journey = JourneyDetailService.get_my_journey_detail(token, breadcrumb)
         logger.info(
             f"get_my_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
         )
@@ -96,6 +98,8 @@ def create_journey_routes():
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         data = request.get_json() or {}
+        if "profile" in data:
+            raise HTTPForbidden("Cannot update profile field")
         journey = JourneyService.update_journey(journey_id, data, token, breadcrumb)
         logger.info(
             f"update_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"

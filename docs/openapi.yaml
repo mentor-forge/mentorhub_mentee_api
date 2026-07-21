@@ -103,26 +103,28 @@ paths:
         - Journey
       summary: Get authenticated user's Journey
       description: |
-        Return the Journey for the authenticated user. The server resolves the document
+        Return the Journey for the authenticated user with the token owner's Profile
+        embedded as a read-only `profile` property. The server resolves the Journey
         using `profile_id` from the JWT. When no Journey exists, the server clones the
         template Journey (`ffff00000000000000000001`), sets `_id` and `profile_id` to
-        the token's `profile_id`, and returns the new document.
+        the token's `profile_id`, and returns the new document. The Profile document is
+        loaded at read time and is not stored on the Journey collection.
       operationId: getMyJourney
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: Successfully retrieved Journey
+          description: Successfully retrieved Journey with embedded Profile
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Journey'
+                $ref: '#/components/schemas/JourneyDetail'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
-          description: Template Journey not found
+          description: Template Journey or Profile not found
           content:
             application/json:
               schema:
@@ -302,7 +304,9 @@ paths:
       description: |
         Update a Journey document. Requires ownership (`journey_id` equals token
         `profile_id`) or `admin` in token `roles`. Cannot update `_id`, `profile_id`,
-        `created`, `saved`, `library`, `now`, or `next` — those are server-managed.
+        `profile`, `created`, `saved`, `library`, `now`, or `next` — those are
+        server-managed. Response body is the persisted Journey document without
+        embedded `profile`; clients refetch `GET /api/journey` for profile data.
       operationId: updateJourney
       security:
         - bearerAuth: []
@@ -859,6 +863,144 @@ components:
         saved:
           $ref: '#/components/schemas/Breadcrumb'
 
+    Profile:
+      type: object
+      description: |
+        Authoritative person record — IdP username in JWT claims, roles and customer
+        sponsorship on Profile. Embedded read-only on `GET /api/journey`; not
+        patchable via Journey endpoints.
+      additionalProperties: false
+      properties:
+        _id:
+          type: string
+          description: The unique identifier for the Profile.
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        name:
+          type: string
+          description: The IDP Username used in JWT Claims
+          pattern: '^[^\s]{1,40}$'
+          example: my-Profile
+        full_name:
+          type: string
+          description: Display name from intake (distinct from IdP username)
+          pattern: '^[^\t\n]{0,255}$'
+          example: Jane Doe
+        description:
+          type: string
+          description: A Comment the user adds to their profile
+          pattern: '^[^\t\n]{0,255}$'
+          example: A sample Profile document
+        email:
+          type: string
+          description: The users email address
+          pattern: '^[^\s@]+@[^\s@]+\.[^\s@]+$'
+          example: user@example.com
+        email_verified:
+          type: boolean
+          description: Has the user verified this email
+        customer_id:
+          type: string
+          description: The customer this profile is associated with
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        mentor_id:
+          type: string
+          description: The _id of this persons Mentor
+          pattern: '^[0-9a-fA-F]{24}$'
+          example: 507f1f77bcf86cd799439011
+        status:
+          type: string
+          description: Status of the document
+          enum:
+            - active
+            - archived
+            - suspended
+          example: active
+        roles:
+          type: array
+          description: The user roles this profile has
+          items:
+            type: string
+            enum:
+              - admin
+              - coordinator
+              - customer
+              - mentee
+              - mentor
+        interests:
+          type: array
+          description: A list of topics this person is interested in
+          items:
+            type: string
+            enum:
+              - api
+              - data
+              - design
+              - games
+              - iot
+              - robot
+              - sre
+              - ux
+        goals:
+          type: array
+          description: The goals set by a user
+          items:
+            type: string
+            pattern: '^[^\t\n]{0,255}$'
+        experience:
+          type: array
+          description: Work History - newest to oldest
+          items:
+            type: object
+            additionalProperties: false
+            properties:
+              company:
+                type: string
+                description: The Company Name
+                pattern: '^[^\t\n]{0,255}$'
+              roles:
+                type: array
+                description: The roles this person filled at this company
+                items:
+                  type: object
+                  additionalProperties: false
+                  properties:
+                    title:
+                      type: string
+                      description: Te Job Title
+                      pattern: '^[^\t\n]{0,255}$'
+                    description:
+                      type: string
+                      description: Description of the work, projects, responsibilities
+                      maxLength: 4096
+                    start:
+                      type: string
+                      format: date-time
+                      description: Start Date
+                    end:
+                      type: string
+                      format: date-time
+                      description: End Date
+                    technologies:
+                      type: array
+                      description: Technologies Used
+                      items:
+                        type: string
+                        enum:
+                          - CSS
+                          - HTML
+                          - Java
+                          - MongoDB
+                          - Other
+                          - Python
+                          - React
+                          - TypeScript
+        created:
+          $ref: '#/components/schemas/Breadcrumb'
+        saved:
+          $ref: '#/components/schemas/Breadcrumb'
+
     JourneyLibraryItem:
       type: object
       description: A completed resource in the Journey library
@@ -942,10 +1084,25 @@ components:
           items:
             $ref: '#/components/schemas/JourneyNextTopic'
 
+    JourneyDetail:
+      type: object
+      description: |
+        Journey document with the token owner's Profile embedded at read time.
+        The `profile` property is not persisted on the Journey collection.
+      allOf:
+        - $ref: '#/components/schemas/Journey'
+        - type: object
+          additionalProperties: false
+          required:
+            - profile
+          properties:
+            profile:
+              $ref: '#/components/schemas/Profile'
+
     JourneyUpdate:
       type: object
       description: |
-        Fields to update in a Journey document. Cannot include _id, profile_id,
+        Fields to update in a Journey document. Cannot include _id, profile_id, profile,
         created, saved, library, now, or next.
       additionalProperties: false
       properties:

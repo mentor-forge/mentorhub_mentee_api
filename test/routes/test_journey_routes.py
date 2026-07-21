@@ -38,23 +38,25 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
-    @patch("src.routes.journey_routes.JourneyService.get_my_journey")
+    @patch("src.routes.journey_routes.JourneyDetailService.get_my_journey_detail")
     def test_get_my_journey_success(
-        self, mock_get_my_journey, mock_create_breadcrumb, mock_create_token
+        self, mock_get_my_journey_detail, mock_create_breadcrumb, mock_create_token
     ):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
-        mock_get_my_journey.return_value = {
+        mock_get_my_journey_detail.return_value = {
             "_id": self.profile_id,
             "profile_id": self.profile_id,
             "status": "active",
+            "profile": {"_id": self.profile_id, "name": "test-user"},
         }
 
         response = self.client.get("/api/journey")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["_id"], self.profile_id)
-        mock_get_my_journey.assert_called_once_with(
+        self.assertIn("profile", response.json)
+        mock_get_my_journey_detail.assert_called_once_with(
             self.mock_token, self.mock_breadcrumb
         )
 
@@ -78,6 +80,22 @@ class TestJourneyRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json["status"], "archived")
+        self.assertNotIn("profile", response.json)
+
+    @patch("src.routes.journey_routes.create_flask_token")
+    @patch("src.routes.journey_routes.create_flask_breadcrumb")
+    def test_update_journey_rejects_profile_body(
+        self, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+
+        response = self.client.patch(
+            f"/api/journey/{self.profile_id}",
+            json={"profile": {"_id": self.profile_id, "name": "hacker"}},
+        )
+
+        self.assertEqual(response.status_code, 403)
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
@@ -110,6 +128,7 @@ class TestJourneyRoutes(unittest.TestCase):
         response = self.client.patch(f"/api/journey/advance/{resource_id}")
 
         self.assertEqual(response.status_code, 200)
+        self.assertNotIn("profile", response.json)
         mock_advance.assert_called_once_with(
             resource_id, self.mock_token, self.mock_breadcrumb
         )
