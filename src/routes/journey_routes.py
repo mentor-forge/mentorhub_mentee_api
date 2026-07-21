@@ -3,6 +3,8 @@ Journey routes for Flask API.
 
 Provides endpoints for Journey domain:
 - GET /api/journey - Get authenticated user's journey (get-or-create)
+- PATCH /api/journey/promote/path/<path_id> - Promote all Path modules from later to next
+- PATCH /api/journey/promote/module/<path_id>/<module_name> - Promote one module to next
 - PATCH /api/journey/advance/<resource_id> - Advance resource from next to now
 - PATCH /api/journey/complete/<resource_id> - Complete resource in now
 - PATCH /api/journey/<id> - Update a journey document
@@ -13,6 +15,7 @@ from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
 from api_utils.services import JourneyService
+from src.services.journey_promote_service import JourneyPromoteService
 
 import logging
 
@@ -32,6 +35,32 @@ def create_journey_routes():
         journey = JourneyService.get_my_journey(token, breadcrumb)
         logger.info(
             f"get_my_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
+        )
+        return jsonify(journey), 200
+
+    @journey_routes.route("/promote/path/<path_id>", methods=["PATCH"])
+    @handle_route_exceptions
+    def promote_journey_path(path_id):
+        """PATCH /api/journey/promote/path/<path_id> - Promote all Path modules to next."""
+        token = create_flask_token()
+        breadcrumb = create_flask_breadcrumb(token)
+        journey = JourneyPromoteService.promote_path_to_next(path_id, token, breadcrumb)
+        logger.info(
+            f"promote_journey_path Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
+        )
+        return jsonify(journey), 200
+
+    @journey_routes.route("/promote/module/<path_id>/<module_name>", methods=["PATCH"])
+    @handle_route_exceptions
+    def promote_journey_module(path_id, module_name):
+        """PATCH /api/journey/promote/module/<path_id>/<module_name> - Promote one module to next."""
+        token = create_flask_token()
+        breadcrumb = create_flask_breadcrumb(token)
+        journey = JourneyPromoteService.promote_module_to_next(
+            path_id, module_name, token, breadcrumb
+        )
+        logger.info(
+            f"promote_journey_module Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
         )
         return jsonify(journey), 200
 

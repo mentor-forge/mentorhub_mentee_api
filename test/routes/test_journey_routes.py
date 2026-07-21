@@ -7,7 +7,11 @@ from unittest.mock import patch
 from flask import Flask
 
 from src.routes.journey_routes import create_journey_routes
-from api_utils.flask_utils.exceptions import HTTPForbidden, HTTPUnauthorized
+from api_utils.flask_utils.exceptions import (
+    HTTPBadRequest,
+    HTTPForbidden,
+    HTTPUnauthorized,
+)
 
 
 class TestJourneyRoutes(unittest.TestCase):
@@ -128,6 +132,70 @@ class TestJourneyRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         mock_complete.assert_called_once()
+
+    @patch("src.routes.journey_routes.create_flask_token")
+    @patch("src.routes.journey_routes.create_flask_breadcrumb")
+    @patch("src.routes.journey_routes.JourneyPromoteService.promote_path_to_next")
+    def test_promote_journey_path_success(
+        self, mock_promote_path, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        path_id = "B00000000000000000000001"
+        mock_promote_path.return_value = {
+            "_id": self.profile_id,
+            "later": [],
+            "next": [{"name": "ModuleA"}],
+        }
+
+        response = self.client.patch(f"/api/journey/promote/path/{path_id}")
+
+        self.assertEqual(response.status_code, 200)
+        mock_promote_path.assert_called_once_with(
+            path_id, self.mock_token, self.mock_breadcrumb
+        )
+
+    @patch("src.routes.journey_routes.create_flask_token")
+    @patch("src.routes.journey_routes.create_flask_breadcrumb")
+    @patch("src.routes.journey_routes.JourneyPromoteService.promote_module_to_next")
+    def test_promote_journey_module_success(
+        self, mock_promote_module, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        path_id = "B00000000000000000000001"
+        module_name = "Foundations"
+        mock_promote_module.return_value = {
+            "_id": self.profile_id,
+            "next": [{"name": module_name}],
+        }
+
+        response = self.client.patch(
+            f"/api/journey/promote/module/{path_id}/{module_name}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_promote_module.assert_called_once_with(
+            path_id, module_name, self.mock_token, self.mock_breadcrumb
+        )
+
+    @patch("src.routes.journey_routes.create_flask_token")
+    @patch("src.routes.journey_routes.create_flask_breadcrumb")
+    @patch("src.routes.journey_routes.JourneyPromoteService.promote_module_to_next")
+    def test_promote_journey_module_duplicate(
+        self, mock_promote_module, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_promote_module.side_effect = HTTPBadRequest(
+            "Module 'Foundations' is already present in journey next scope"
+        )
+
+        response = self.client.patch(
+            "/api/journey/promote/module/B00000000000000000000001/Foundations"
+        )
+
+        self.assertEqual(response.status_code, 400)
 
     @patch("src.routes.journey_routes.create_flask_token")
     def test_get_my_journey_unauthorized(self, mock_create_token):
