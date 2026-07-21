@@ -1078,12 +1078,12 @@ components:
         name:
           type: string
           description: The searchable name of the document
-          pattern: '^[^\s]{1,40}$'
+          pattern: '^[^\t\n]{0,255}$'
           example: my-Resource
         description:
           type: string
           description: The description of the Resource
-          pattern: '^[^\t\n]{0,255}$'
+          maxLength: 4096
           example: A sample Resource document
         url:
           type: string
@@ -1123,12 +1123,12 @@ components:
           type: string
           description: The skill level
           enum:
-            - Candidate
             - Apprentice
-            - Practioneer
+            - Candidate
             - Craftsperson
-            - Master
             - Distinguished
+            - Master
+            - Practioneer
           example: Apprentice
         interests:
           type: array
@@ -1136,28 +1136,28 @@ components:
           items:
             type: string
             enum:
-              - ux
               - api
-              - sre
               - data
               - design
               - games
               - iot
               - robot
+              - sre
+              - ux
         technologies:
           type: array
           description: A list of technologies this resource covers
           items:
             type: string
             enum:
-              - React
-              - MongoDB
-              - Python
-              - TypeScript
-              - Java
-              - HTML
               - CSS
+              - HTML
+              - Java
+              - MongoDB
               - Other
+              - Python
+              - React
+              - TypeScript
         last_verified:
           type: string
           format: date-time
@@ -1387,12 +1387,12 @@ components:
         name:
           type: string
           description: The searchable name of the Resource
-          pattern: '^[^\s]{1,40}$'
+          pattern: '^[^\t\n]{0,255}$'
           example: my-Resource
         description:
           type: string
           description: The description of the Resource
-          pattern: '^[^\t\n]{0,255}$'
+          maxLength: 4096
           example: A sample Resource document
 
     PathTopicDetail:
