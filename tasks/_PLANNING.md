@@ -127,6 +127,23 @@ When planning or reviewing tasks, include this rule in **Context** or **Goals** 
 
 Reference: `../mentorhub_api_utils/api_utils/mongo_utils/mongo_io.py`, `../mentorhub/DeveloperEdition/standards/api_standards.md`, and shipped task `SHIPPED.L070.refactor_services_to_mongoio.md`.
 
+## Journey harvest adoption (`api-utils==0.5.2`)
+
+**External prerequisite satisfied**: `api-utils==0.5.2` is published to CodeArtifact with shared `JourneyService` promote mutations and GET profile enrichment.
+
+| Task | Scope |
+|------|--------|
+| `SHIPPED.L200.bump_api_utils_0_5_2.md` | Pin `api-utils==0.5.2`; `pipenv run install` only |
+| `SHIPPED.L201.adopt_journey_harvest_from_api_utils.md` | Routes → `JourneyService`; delete entire `src/services/`; update route tests |
+
+Execute **L200 → L201** in order.
+
+Supersedes mentee-side ISSUE artifacts that covered promote-only or partial adoption:
+
+- `tasks/ISSUE.mentorhub_api_utils.adopt_journey_promote_from_api_utils.md`
+- `tasks/ISSUE.mentorhub_api_utils.harvest_journey_promote_mutations.md`
+- `tasks/ISSUE.mentorhub_api_utils.journey_get_profile_enrichment.md`
+
 ## Sample task file
 
 For a complete example of a well‑formed `Run as needed` task, see:

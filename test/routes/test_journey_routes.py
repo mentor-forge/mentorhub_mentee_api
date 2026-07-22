@@ -38,7 +38,7 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
-    @patch("src.routes.journey_routes.JourneyDetailService.get_my_journey_detail")
+    @patch("src.routes.journey_routes.JourneyService.get_my_journey_detail")
     def test_get_my_journey_success(
         self, mock_get_my_journey_detail, mock_create_breadcrumb, mock_create_token
     ):
@@ -84,11 +84,13 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
+    @patch("src.routes.journey_routes.JourneyService.update_journey")
     def test_update_journey_rejects_profile_body(
-        self, mock_create_breadcrumb, mock_create_token
+        self, mock_update_journey, mock_create_breadcrumb, mock_create_token
     ):
         mock_create_token.return_value = self.mock_token
         mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_update_journey.side_effect = HTTPForbidden("Cannot update profile field")
 
         response = self.client.patch(
             f"/api/journey/{self.profile_id}",
@@ -96,6 +98,12 @@ class TestJourneyRoutes(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+        mock_update_journey.assert_called_once_with(
+            self.profile_id,
+            {"profile": {"_id": self.profile_id, "name": "hacker"}},
+            self.mock_token,
+            self.mock_breadcrumb,
+        )
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
@@ -154,7 +162,7 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
-    @patch("src.routes.journey_routes.JourneyPromoteService.promote_path_to_next")
+    @patch("src.routes.journey_routes.JourneyService.promote_path_to_next")
     def test_promote_journey_path_success(
         self, mock_promote_path, mock_create_breadcrumb, mock_create_token
     ):
@@ -176,7 +184,7 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
-    @patch("src.routes.journey_routes.JourneyPromoteService.promote_module_to_next")
+    @patch("src.routes.journey_routes.JourneyService.promote_module_to_next")
     def test_promote_journey_module_success(
         self, mock_promote_module, mock_create_breadcrumb, mock_create_token
     ):
@@ -200,7 +208,7 @@ class TestJourneyRoutes(unittest.TestCase):
 
     @patch("src.routes.journey_routes.create_flask_token")
     @patch("src.routes.journey_routes.create_flask_breadcrumb")
-    @patch("src.routes.journey_routes.JourneyPromoteService.promote_module_to_next")
+    @patch("src.routes.journey_routes.JourneyService.promote_module_to_next")
     def test_promote_journey_module_duplicate(
         self, mock_promote_module, mock_create_breadcrumb, mock_create_token
     ):

@@ -49,7 +49,11 @@ def test_get_my_journey_idempotent():
 
     assert first.status_code == 200, _err(first, 200)
     assert second.status_code == 200, _err(second, 200)
-    assert first.json()["_id"].lower() == second.json()["_id"].lower() == profile_id.lower()
+    assert (
+        first.json()["_id"].lower()
+        == second.json()["_id"].lower()
+        == profile_id.lower()
+    )
 
 
 @pytest.mark.e2e
