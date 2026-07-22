@@ -1,6 +1,6 @@
 # L200 – Bump api-utils to 0.5.2 for Journey harvest
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: none  
 **Description**: Pin and install `api-utils==0.5.2` so `JourneyService` exposes promote mutations and GET profile enrichment needed for L201.
@@ -73,3 +73,15 @@ Paths are relative to the **API repository root**.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+**Summary of changes**
+- Bumped `Pipfile` pin from `api-utils==0.5.1` to `==0.5.2`.
+- Updated `Pipfile.lock` via `scripts/pipenv-lock.sh` and `pipenv run install`.
+
+**Test results**
+- Import check: `get_my_journey_detail`, `promote_path_to_next`, `promote_module_to_next`, `"profile"` in `RESTRICTED_UPDATE_FIELDS` — ok
+- `pipenv run test`: 63 passed, 32 deselected
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container`: pass
+- `pipenv run api` + `pipenv run e2e`: 32 passed, 63 deselected
