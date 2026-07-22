@@ -14,10 +14,7 @@ from flask import Blueprint, jsonify, request
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from api_utils.flask_utils.exceptions import HTTPForbidden
 from api_utils.services import JourneyService
-from src.services.journey_detail_service import JourneyDetailService
-from src.services.journey_promote_service import JourneyPromoteService
 
 import logging
 
@@ -34,7 +31,7 @@ def create_journey_routes():
         """GET /api/journey - Return the token owner's journey with embedded profile."""
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        journey = JourneyDetailService.get_my_journey_detail(token, breadcrumb)
+        journey = JourneyService.get_my_journey_detail(token, breadcrumb)
         logger.info(
             f"get_my_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
         )
@@ -46,7 +43,7 @@ def create_journey_routes():
         """PATCH /api/journey/promote/path/<path_id> - Promote all Path modules to next."""
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        journey = JourneyPromoteService.promote_path_to_next(path_id, token, breadcrumb)
+        journey = JourneyService.promote_path_to_next(path_id, token, breadcrumb)
         logger.info(
             f"promote_journey_path Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"
         )
@@ -58,7 +55,7 @@ def create_journey_routes():
         """PATCH /api/journey/promote/module/<path_id>/<module_name> - Promote one module to next."""
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
-        journey = JourneyPromoteService.promote_module_to_next(
+        journey = JourneyService.promote_module_to_next(
             path_id, module_name, token, breadcrumb
         )
         logger.info(
@@ -98,8 +95,6 @@ def create_journey_routes():
         token = create_flask_token()
         breadcrumb = create_flask_breadcrumb(token)
         data = request.get_json() or {}
-        if "profile" in data:
-            raise HTTPForbidden("Cannot update profile field")
         journey = JourneyService.update_journey(journey_id, data, token, breadcrumb)
         logger.info(
             f"update_journey Success {str(breadcrumb['at_time'])}, {breadcrumb['correlation_id']}"

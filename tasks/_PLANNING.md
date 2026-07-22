@@ -133,8 +133,8 @@ Reference: `../mentorhub_api_utils/api_utils/mongo_utils/mongo_io.py`, `../mento
 
 | Task | Scope |
 |------|--------|
-| `PENDING.L200.bump_api_utils_0_5_2.md` | Pin `api-utils==0.5.2`; `pipenv run install` only |
-| `PENDING.L201.adopt_journey_harvest_from_api_utils.md` | Routes → `JourneyService`; delete entire `src/services/`; update route tests |
+| `SHIPPED.L200.bump_api_utils_0_5_2.md` | Pin `api-utils==0.5.2`; `pipenv run install` only |
+| `SHIPPED.L201.adopt_journey_harvest_from_api_utils.md` | Routes → `JourneyService`; delete entire `src/services/`; update route tests |
 
 Execute **L200 → L201** in order.
 

@@ -1,6 +1,6 @@
 # L201 – Adopt Journey harvest from api-utils; remove local services
 
-**Status**: Pending  
+**Status**: Shipped  
 **Type**: Feature  
 **Depends On**: `L200_bump_api_utils_0_5_2`  
 **Description**: Switch all Journey routes to shared `JourneyService`, delete temporary local promote/detail services and their unit tests, and update route tests to patch `JourneyService.*`.
@@ -98,3 +98,17 @@ Run all commands from the **API repository root**.
 The agent must not update files outside this list unless a stray `src.services` or local journey service reference is discovered in `src/` or `test/` during implementation — in that case, add the file to **Execution Notes** and update it in the same commit.
 
 ## Execution Notes
+
+**Summary of changes**
+- Switched `GET /api/journey` and promote routes to `JourneyService` from `api-utils==0.5.2`.
+- Removed route-level `profile` PATCH guard; service layer rejects via `RESTRICTED_UPDATE_FIELDS`.
+- Deleted entire `src/services/` (temporary Journey promote/detail copies) and duplicate service unit tests.
+- Updated route tests to patch `JourneyService.*`; profile rejection test mocks service-layer `HTTPForbidden`.
+
+**Test results**
+- `rg 'JourneyPromoteService|JourneyDetailService|src\.services' src/ test/` — no matches
+- `pipenv run test`: 52 passed, 32 deselected
+- `pipenv run lint`: pass
+- `pipenv run build`: pass
+- `pipenv run container`: pass
+- `pipenv run api` + `pipenv run e2e`: 32 passed, 52 deselected
