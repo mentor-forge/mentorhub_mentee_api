@@ -1,6 +1,6 @@
 # F204 – NoteService subclass (`create_note`)
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F203_openapi_1_0_0_consume_gets`  
 **Description:** Recreate `src/services/` and a Mentee `NoteService` subclass that restores `create_note` (stripped from api-utils in R079). Inbound create requires the mentee role and `profile_id == token.profile_id`. Do not switch routes and do not pin 1.0.0 — existing Note POST still uses `api_utils.services` until F208.
@@ -93,3 +93,8 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+- Created `src/services/__init__.py`.
+- Created `src/services/note_service.py` subclassing `SharedNoteService` with inbound `_check_permission` (requires mentee or admin role for `create`), profile_id stamping/validation, and `create_note`.
+- Created `test/services/test_note_service.py` testing RBAC, profile validation, admin bypass, MongoIO integration, and inherited methods.
+- Ran `pipenv run test`, `pipenv run lint`, `pipenv run build` with all 58 tests passing.
