@@ -1,6 +1,6 @@
 # F207 – JourneyService subclass (Mentee control)
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F206_resource_path_event_subclasses`  
 **Description:** Restore Journey clone-on-GET, profile enrich, PATCH, promote, advance, and complete on a Mentee subclass of shared `JourneyService`. This is the F-EA12 service work. Shared 1.0.0 keeps `get_journey` (404 if missing or hidden) and `get_journey_progress` only. `complete_resource` calls **local** `AggregationService.add_completion`. Do not switch routes and do not pin in this task.
@@ -88,3 +88,7 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+- Created `src/services/journey_service.py` subclassing `SharedJourneyService` with `_clone_template`, `get_my_journey`, `get_my_journey_detail`, `create_journey`, `update_journey`, `advance_resource`, `complete_resource`, `promote_path_to_next`, `promote_module_to_next`, `_validate_object_id`, and `_oid`.
+- Created `test/services/test_journey_service.py` porting unit tests covering get_my_journey clone, update RBAC, advance, complete, promote, and get_my_journey_detail.
+- Ran `pipenv run test`, `pipenv run lint`, and `pipenv run build` with all 95 unit tests passing.
