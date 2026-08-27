@@ -9,6 +9,7 @@ This folder contains coding tasks that an orchestration agent can execute, based
   - In-repo: `README.md`, `docs/openapi.yaml`, `src/...`, `test/...`, `tasks/...`
 
 - **Context** Before creating any task files you should review the following files for context:
+- ../mentorhub/DeveloperEdition/standards/ArchitecturePrinciples.md
 - ../mentorhub/DeveloperEdition/standards/api_standards.md
 - ../mentorhub_api_utils/README.md
 - ./README.md
@@ -77,7 +78,7 @@ Each task file must contain the following sections under H1 and H2 headings.
 
 ## Naming Conventions
 - **Recommended filename pattern**:
-  - `STATUS.LNNN.short_task_name.md` where L is (F)eature or (D)efect, and NNN is a serial task number. When planning, create only PENDING status tasks. 
+  - `STATUS.LNNN.short_task_name.md` where L is (F)eature or (D)efect, and NNN is a serial task number. Increment task numbers by 1. When planning, create only PENDING status tasks. 
   - Examples:
     - `PENDING.D001.example_defect.md`
     - `PENDING.F010.update_profile_openapi.md`
@@ -119,6 +120,13 @@ Do **not** use bare `pipenv install` or `pipenv install --dev` in task instructi
 
 Task **Testing Expectations** and **Goals** should call out `pipenv run install` whenever `Pipfile` or `Pipfile.lock` changes.
 
+### Shared Library / Version Bump Checklist
+When planning a task that upgrades or pins a shared package (e.g. `api-utils`):
+1. **Context & Audit**: Include `../mentorhub_api_utils/README.md` and relevant `api_utils` modules in **Context**.
+2. **Test Tokens & Claims**: Explicitly include `test/e2e/e2e_auth.py` in **Outputs** and **Goals** to sync test token claim schemas (e.g. `profile_id`, `customer_id`, `mentor_id`) with `api_utils.flask_utils.token.Token`.
+3. **API Signatures**: Audit helper signatures (`MongoIO`, `list_query`, `encoder`, exceptions) against active `api_utils` source code.
+4. **Testing Expectations**: Include the mandatory gate `pipenv run container && pipenv run api && pipenv run e2e` in the task's **Testing Expectations**.
+
 ## MongoDB access
 
 Service code must route all MongoDB I/O through **`MongoIO`** (`api_utils.mongo_utils.mongo_io`) — use `get_document`, `get_documents`, `create_document`, `update_document`, and `upsert_document` as appropriate. Do **not** call PyMongo directly (for example `mongo.get_collection(...)` followed by `collection.find`, `find_one`, `insert_one`, or similar).
@@ -126,26 +134,3 @@ Service code must route all MongoDB I/O through **`MongoIO`** (`api_utils.mongo_
 When planning or reviewing tasks, include this rule in **Context** or **Goals** for any work that touches `src/services/`. If a task cannot comply without an upstream `api_utils` change, document the gap and any temporary exception in that task’s **Execution Notes** — not here.
 
 Reference: `../mentorhub_api_utils/api_utils/mongo_utils/mongo_io.py`, `../mentorhub/DeveloperEdition/standards/api_standards.md`, and shipped task `SHIPPED.L070.refactor_services_to_mongoio.md`.
-
-## Journey harvest adoption (`api-utils==0.5.2`)
-
-**External prerequisite satisfied**: `api-utils==0.5.2` is published to CodeArtifact with shared `JourneyService` promote mutations and GET profile enrichment.
-
-| Task | Scope |
-|------|--------|
-| `SHIPPED.L200.bump_api_utils_0_5_2.md` | Pin `api-utils==0.5.2`; `pipenv run install` only |
-| `SHIPPED.L201.adopt_journey_harvest_from_api_utils.md` | Routes → `JourneyService`; delete entire `src/services/`; update route tests |
-
-Execute **L200 → L201** in order.
-
-Supersedes mentee-side ISSUE artifacts that covered promote-only or partial adoption:
-
-- `tasks/ISSUE.mentorhub_api_utils.adopt_journey_promote_from_api_utils.md`
-- `tasks/ISSUE.mentorhub_api_utils.harvest_journey_promote_mutations.md`
-- `tasks/ISSUE.mentorhub_api_utils.journey_get_profile_enrichment.md`
-
-## Sample task file
-
-For a complete example of a well‑formed `Run as needed` task, see:
-
-- `AS_NEEDED.T998.example_update_openapi.md`

@@ -27,9 +27,9 @@ class TestPathRoutes(unittest.TestCase):
         }
         self.default_sort = [("name", 1), ("_id", 1)]
 
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_paths")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.path_service.PathService.get_paths")
     def test_get_paths_success(
         self,
         mock_get_paths,
@@ -60,9 +60,9 @@ class TestPathRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_paths")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.path_service.PathService.get_paths")
     def test_get_paths_with_pagination_headers(
         self,
         mock_get_paths,
@@ -89,9 +89,9 @@ class TestPathRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_paths")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.path_service.PathService.get_paths")
     def test_get_paths_with_name_filter(
         self,
         mock_get_paths,
@@ -115,9 +115,9 @@ class TestPathRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_paths")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.path_service.PathService.get_paths")
     def test_get_paths_invalid_pagination_returns_400(
         self,
         mock_get_paths,
@@ -133,9 +133,9 @@ class TestPathRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         mock_get_paths.assert_not_called()
 
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_path")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.path_service.PathService.get_path")
     def test_get_path_success(
         self,
         mock_get_path,
@@ -180,9 +180,9 @@ class TestPathRoutes(unittest.TestCase):
             "123", self.mock_token, self.mock_breadcrumb
         )
 
-    @patch("src.routes.path_routes.create_flask_token")
-    @patch("src.routes.path_routes.create_flask_breadcrumb")
-    @patch("src.routes.path_routes.PathService.get_path")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.path_service.PathService.get_path")
     def test_get_path_not_found(
         self,
         mock_get_path,
@@ -202,7 +202,7 @@ class TestPathRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json["error"], "Path 999 not found")
 
-    @patch("src.routes.path_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
     def test_get_paths_unauthorized(self, mock_create_token):
         """Test GET /api/path when token is invalid."""
         from api_utils.flask_utils.exceptions import HTTPUnauthorized

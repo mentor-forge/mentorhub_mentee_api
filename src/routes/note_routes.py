@@ -2,30 +2,31 @@
 Note routes for Flask API.
 
 Provides endpoints for Note domain:
+- GET /api/note - Get paginated note documents for a resource (from shared factory)
 - POST /api/note - Create a new note document
 """
 
-from flask import Blueprint, jsonify, request
+import logging
+from flask import jsonify, request
+from api_utils.routes.shared_get_routes import create_note_get_routes
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from api_utils.services import NoteService
-
-import logging
+from src.services.note_service import NoteService
 
 logger = logging.getLogger(__name__)
 
 
 def create_note_routes():
     """
-    Create a Flask Blueprint exposing note endpoints.
+    Create Flask Blueprint for Note routes.
 
     Returns:
         Blueprint: Flask Blueprint with note routes
     """
-    note_routes = Blueprint("note_routes", __name__)
+    bp = create_note_get_routes(NoteService)
 
-    @note_routes.route("", methods=["POST"])
+    @bp.route("", methods=["POST"])
     @handle_route_exceptions
     def create_note():
         """
@@ -46,4 +47,4 @@ def create_note_routes():
         return jsonify(note), 201
 
     logger.info("Note Flask Routes Registered")
-    return note_routes
+    return bp

@@ -67,6 +67,31 @@ class TestEventRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertIn("error", response.json)
 
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.event_service.EventService.get_events")
+    def test_get_events_success(
+        self, mock_get_events, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_events.return_value = [
+            {"_id": "123", "type": "link", "created": self.mock_breadcrumb}
+        ]
+
+        response = self.client.get("/api/event")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json), 1)
+        mock_get_events.assert_called_once_with(
+            self.mock_token,
+            self.mock_breadcrumb,
+            0,
+            20,
+            {},
+            [("created.at_time", -1), ("_id", -1)],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

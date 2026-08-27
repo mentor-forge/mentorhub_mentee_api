@@ -233,6 +233,27 @@ class TestJourneyRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertIn("error", response.json)
 
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.journey_service.JourneyService.get_journey")
+    def test_get_journey_by_id_success(
+        self, mock_get_journey, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_journey.return_value = {
+            "_id": self.profile_id,
+            "status": "active",
+        }
+
+        response = self.client.get(f"/api/journey/{self.profile_id}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json["_id"], self.profile_id)
+        mock_get_journey.assert_called_once_with(
+            self.profile_id, self.mock_token, self.mock_breadcrumb
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

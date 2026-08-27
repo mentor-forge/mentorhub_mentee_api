@@ -27,9 +27,9 @@ class TestResourceRoutes(unittest.TestCase):
         }
         self.default_sort = [("name", 1), ("_id", 1)]
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_success(
         self,
         mock_get_resources,
@@ -60,9 +60,9 @@ class TestResourceRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_with_pagination_headers(
         self,
         mock_get_resources,
@@ -91,9 +91,9 @@ class TestResourceRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_with_filter_and_sort_query_params(
         self,
         mock_get_resources,
@@ -119,9 +119,9 @@ class TestResourceRoutes(unittest.TestCase):
             [("description", -1), ("_id", -1)],
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_with_multi_field_filters(
         self,
         mock_get_resources,
@@ -156,9 +156,9 @@ class TestResourceRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_empty_multi_field_filters_omitted(
         self,
         mock_get_resources,
@@ -184,9 +184,9 @@ class TestResourceRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_combined_multi_field_filter_and_pagination(
         self,
         mock_get_resources,
@@ -218,9 +218,9 @@ class TestResourceRoutes(unittest.TestCase):
             self.default_sort,
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resources")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resources")
     def test_get_resources_invalid_pagination_returns_400(
         self,
         mock_get_resources,
@@ -236,9 +236,9 @@ class TestResourceRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         mock_get_resources.assert_not_called()
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resource")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resource")
     def test_get_resource_success(
         self,
         mock_get_resource,
@@ -266,9 +266,9 @@ class TestResourceRoutes(unittest.TestCase):
             "123", self.mock_token, self.mock_breadcrumb
         )
 
-    @patch("src.routes.resource_routes.create_flask_token")
-    @patch("src.routes.resource_routes.create_flask_breadcrumb")
-    @patch("src.routes.resource_routes.ResourceService.get_resource")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.resource_service.ResourceService.get_resource")
     def test_get_resource_not_found(
         self,
         mock_get_resource,
@@ -288,7 +288,7 @@ class TestResourceRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json["error"], "Resource 999 not found")
 
-    @patch("src.routes.resource_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
     def test_get_resources_unauthorized(self, mock_create_token):
         """Test GET /api/resource when token is invalid."""
         from api_utils.flask_utils.exceptions import HTTPUnauthorized

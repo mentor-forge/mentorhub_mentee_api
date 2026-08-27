@@ -57,6 +57,27 @@ def test_get_my_journey_idempotent():
 
 
 @pytest.mark.e2e
+def test_get_journey_by_id_endpoint():
+    """GET /api/journey/<journey_id> returns plain Journey document."""
+    profile_id = "A00000000000000000000002"
+    token = get_auth_token(profile_id=profile_id)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # Ensure journey exists
+    my_resp = requests.get(f"{BASE_URL}/api/journey", headers=headers)
+    assert my_resp.status_code == 200, _err(my_resp, 200)
+    journey_id = my_resp.json()["_id"]
+
+    response = requests.get(f"{BASE_URL}/api/journey/{journey_id}", headers=headers)
+    assert response.status_code == 200, _err(response, 200)
+
+    data = response.json()
+    assert data["_id"].lower() == journey_id.lower()
+    assert "status" in data
+    assert "profile" not in data
+
+
+@pytest.mark.e2e
 def test_journey_endpoints_require_auth():
     """Journey endpoints require authentication."""
     response = requests.get(f"{BASE_URL}/api/journey")

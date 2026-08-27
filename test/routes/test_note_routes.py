@@ -65,6 +65,30 @@ class TestNoteRoutes(unittest.TestCase):
 
         self.assertEqual(response.status_code, 401)
 
+    @patch("api_utils.routes.shared_get_routes.create_flask_token")
+    @patch("api_utils.routes.shared_get_routes.create_flask_breadcrumb")
+    @patch("src.services.note_service.NoteService.get_notes_for_resource")
+    def test_get_notes_success(
+        self, mock_get_notes, mock_create_breadcrumb, mock_create_token
+    ):
+        mock_create_token.return_value = self.mock_token
+        mock_create_breadcrumb.return_value = self.mock_breadcrumb
+        mock_get_notes.return_value = [{"_id": "123", "note": "test note"}]
+
+        response = self.client.get("/api/note?resource_id=507f1f77bcf86cd799439011")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json), 1)
+        mock_get_notes.assert_called_once_with(
+            "507f1f77bcf86cd799439011",
+            self.mock_token,
+            self.mock_breadcrumb,
+            0,
+            20,
+            {},
+            [("created.at_time", -1), ("_id", -1)],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

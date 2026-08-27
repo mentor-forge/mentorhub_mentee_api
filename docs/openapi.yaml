@@ -30,13 +30,13 @@ tags:
     description: Monitoring endpoints
   - name: Journey
     description: |
-      Token-scoped Journey read (get-or-create), ownership RBAC on PATCH, and
+      Token-scoped Journey read (get-or-create), consume GET by ID, ownership RBAC on PATCH, and
       server-managed mutations: promote Path/module from later to next, advance
       (next to now), and complete (now to library; records Events).
   - name: Note
-    description: Note operations (create only)
+    description: Note operations (list and create)
   - name: Event
-    description: Event operations (create only; context populated server-side from JWT token)
+    description: Event operations (list and create; context populated server-side from JWT token)
   - name: Aggregation
     description: Resource aggregation metrics and related notes (read)
   - name: Resource
@@ -297,6 +297,40 @@ paths:
         '500':
           $ref: '#/components/responses/InternalError'
   /api/journey/{journey_id}:
+    get:
+      tags:
+        - Journey
+      summary: Get Journey by ID
+      description: |
+        Retrieve a specific Journey document by ID (consume read). Returns 404 when the
+        document does not exist or is hidden by outbound RBAC.
+      operationId: getJourney
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: journey_id
+          in: path
+          required: true
+          description: The Journey ID (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Successfully retrieved Journey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Journey'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
     patch:
       tags:
         - Journey
@@ -340,7 +374,98 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+
   /api/note:
+    get:
+      tags:
+        - Note
+      summary: Get Note documents for a resource
+      description: |
+        Retrieve a paginated array of Note documents for a specific resource.
+
+        Pagination is controlled by request headers:
+        - `offset` — zero-based start index (default `0`)
+        - `size` — page size (default `20`, maximum `100`)
+
+        Required query parameter:
+        - `resource_id` — MongoDB ObjectId of the resource
+
+        Optional query filters:
+        - `status` — comma-separated status values (e.g. active,archived)
+
+        Optional sort query params:
+        - `sort_by` — whitelisted field (`created.at_time`; default `created.at_time`)
+        - `order` — `asc` or `desc` (default `desc`)
+      operationId: getNotes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offset
+          in: header
+          required: false
+          description: Zero-based index of the first note to return
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+        - name: size
+          in: header
+          required: false
+          description: Number of notes to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: resource_id
+          in: query
+          required: true
+          description: Resource ID to retrieve notes for (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: status
+          in: query
+          required: false
+          description: Comma-separated status values (e.g. active,archived)
+          schema:
+            type: string
+            example: active
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (created.at_time)
+          schema:
+            type: string
+            default: created.at_time
+            example: created.at_time
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+            example: desc
+      responses:
+        '200':
+          description: Successfully retrieved Notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
       tags:
         - Note
@@ -368,6 +493,94 @@ paths:
           $ref: '#/components/responses/InternalError'
 
   /api/event:
+    get:
+      tags:
+        - Event
+      summary: Get Event documents
+      description: |
+        Retrieve a paginated array of Event documents visible to the caller.
+
+        Pagination is controlled by request headers:
+        - `offset` — zero-based start index (default `0`)
+        - `size` — page size (default `20`, maximum `100`)
+
+        Optional query filters:
+        - `type` — comma-separated event types (e.g. link,completed)
+        - `profile_id` — optional MongoDB ObjectId to narrow scope
+
+        Optional sort query params:
+        - `sort_by` — whitelisted field (`type`, `created.at_time`; default `created.at_time`)
+        - `order` — `asc` or `desc` (default `desc`)
+      operationId: getEvents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: offset
+          in: header
+          required: false
+          description: Zero-based index of the first event to return
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+            example: 0
+        - name: size
+          in: header
+          required: false
+          description: Number of events to return (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: type
+          in: query
+          required: false
+          description: Comma-separated event types (e.g. link,completed)
+          schema:
+            type: string
+            example: link
+        - name: profile_id
+          in: query
+          required: false
+          description: Optional profile ID filter (MongoDB ObjectId)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: sort_by
+          in: query
+          required: false
+          description: Field to sort by (type, created.at_time)
+          schema:
+            type: string
+            default: created.at_time
+            example: created.at_time
+        - name: order
+          in: query
+          required: false
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+            example: desc
+      responses:
+        '200':
+          description: Successfully retrieved Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
     post:
       tags:
         - Event
@@ -1739,30 +1952,3 @@ components:
           $ref: '#/components/schemas/Breadcrumb'
         saved:
           $ref: '#/components/schemas/Breadcrumb'
-    InfiniteScrollResponse:
-      type: object
-      description: Infinite scroll pagination response
-      required:
-        - items
-        - limit
-        - has_more
-        - next_cursor
-      properties:
-        items:
-          type: array
-          description: Array of resource documents
-          items: {}
-        limit:
-          type: integer
-          description: Items per batch
-          example: 10
-        has_more:
-          type: boolean
-          description: Whether there are more items available
-          example: true
-        next_cursor:
-          type: string
-          nullable: true
-          description: ID of last item for next request (null if no more items)
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439011

@@ -2,30 +2,36 @@
 Journey routes for Flask API.
 
 Provides endpoints for Journey domain:
-- GET /api/journey - Get authenticated user's journey (get-or-create)
-- PATCH /api/journey/promote/path/<path_id> - Promote all Path modules from later to next
+- GET /api/journey - Get authenticated user's journey with embedded profile
+- GET /api/journey/<journey_id> - Get journey by ID (from shared factory)
+- PATCH /api/journey/promote/path/<path_id> - Promote all Path modules to next
 - PATCH /api/journey/promote/module/<path_id>/<module_name> - Promote one module to next
 - PATCH /api/journey/advance/<resource_id> - Advance resource from next to now
 - PATCH /api/journey/complete/<resource_id> - Complete resource in now
-- PATCH /api/journey/<id> - Update a journey document
+- PATCH /api/journey/<journey_id> - Update a journey document
 """
 
-from flask import Blueprint, jsonify, request
+import logging
+from flask import jsonify, request
+from api_utils.routes.shared_get_routes import create_journey_get_routes
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from api_utils.services import JourneyService
-
-import logging
+from src.services.journey_service import JourneyService
 
 logger = logging.getLogger(__name__)
 
 
 def create_journey_routes():
-    """Create a Flask Blueprint exposing journey endpoints."""
-    journey_routes = Blueprint("journey_routes", __name__)
+    """
+    Create a Flask Blueprint exposing journey endpoints.
 
-    @journey_routes.route("", methods=["GET"])
+    Returns:
+        Blueprint: Flask Blueprint with journey routes
+    """
+    bp = create_journey_get_routes(JourneyService)
+
+    @bp.route("", methods=["GET"])
     @handle_route_exceptions
     def get_my_journey():
         """GET /api/journey - Return the token owner's journey with embedded profile."""
@@ -37,7 +43,7 @@ def create_journey_routes():
         )
         return jsonify(journey), 200
 
-    @journey_routes.route("/promote/path/<path_id>", methods=["PATCH"])
+    @bp.route("/promote/path/<path_id>", methods=["PATCH"])
     @handle_route_exceptions
     def promote_journey_path(path_id):
         """PATCH /api/journey/promote/path/<path_id> - Promote all Path modules to next."""
@@ -49,7 +55,7 @@ def create_journey_routes():
         )
         return jsonify(journey), 200
 
-    @journey_routes.route("/promote/module/<path_id>/<module_name>", methods=["PATCH"])
+    @bp.route("/promote/module/<path_id>/<module_name>", methods=["PATCH"])
     @handle_route_exceptions
     def promote_journey_module(path_id, module_name):
         """PATCH /api/journey/promote/module/<path_id>/<module_name> - Promote one module to next."""
@@ -63,7 +69,7 @@ def create_journey_routes():
         )
         return jsonify(journey), 200
 
-    @journey_routes.route("/advance/<resource_id>", methods=["PATCH"])
+    @bp.route("/advance/<resource_id>", methods=["PATCH"])
     @handle_route_exceptions
     def advance_journey_resource(resource_id):
         """PATCH /api/journey/advance/<resource_id> - Move resource from next to now."""
@@ -75,7 +81,7 @@ def create_journey_routes():
         )
         return jsonify(journey), 200
 
-    @journey_routes.route("/complete/<resource_id>", methods=["PATCH"])
+    @bp.route("/complete/<resource_id>", methods=["PATCH"])
     @handle_route_exceptions
     def complete_journey_resource(resource_id):
         """PATCH /api/journey/complete/<resource_id> - Complete resource in now."""
@@ -88,7 +94,7 @@ def create_journey_routes():
         )
         return jsonify(journey), 200
 
-    @journey_routes.route("/<journey_id>", methods=["PATCH"])
+    @bp.route("/<journey_id>", methods=["PATCH"])
     @handle_route_exceptions
     def update_journey(journey_id):
         """PATCH /api/journey/<id> - Update a journey document."""
@@ -102,4 +108,4 @@ def create_journey_routes():
         return jsonify(journey), 200
 
     logger.info("Journey Flask Routes Registered")
-    return journey_routes
+    return bp
