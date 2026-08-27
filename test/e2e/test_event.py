@@ -60,6 +60,19 @@ def test_create_event_ignores_client_context():
 
 
 @pytest.mark.e2e
+def test_get_events_endpoint():
+    """Test GET /api/event endpoint returns JSON array."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = requests.get(f"{BASE_URL}/api/event", headers=headers)
+    assert response.status_code == 200, _err(response, 200)
+
+    events = response.json()
+    assert isinstance(events, list)
+
+
+@pytest.mark.e2e
 def test_event_endpoint_requires_auth():
     """Test that event create requires authentication."""
     response = requests.post(f"{BASE_URL}/api/event", json={"type": "link"})

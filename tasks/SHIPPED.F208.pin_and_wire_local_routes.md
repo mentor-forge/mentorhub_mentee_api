@@ -1,6 +1,6 @@
 # F208 – Pin api-utils 1.0.0 and wire local service routes
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F207_journey_service_subclass`  
 **Description:** F-EA12 owns this pin. Cut over every route module from `api_utils.services` to local subclasses, mount shared `create_*_get_routes` factories, and keep Mentee-local GET/POST/PATCH that the factories do not provide. Lands in the **same PR** as F-EA12 / F-EA13. After this task, no route imports a service class from `api_utils.services`.
@@ -121,3 +121,10 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+- Pinned `api-utils==1.0.0` in `Pipfile` and updated `Pipfile.lock` with `scripts/pipenv-lock.sh` and `pipenv run install`.
+- Wired all route modules (`src/routes/*_routes.py`) to use shared GET route factories and local service subclasses under `src/services/`.
+- Updated `README.md` to document the 1.0.0 pin and local service architecture.
+- Updated route unit tests (`test/routes/*`) and added unit test coverage for new GET list / by-id routes.
+- Updated and added E2E tests (`test/e2e/*`) for new GET endpoints.
+- Verified complete QA gate: `pipenv run container`, `pipenv run api`, and `pipenv run e2e` (all 36 E2E tests passed).

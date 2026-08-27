@@ -46,6 +46,46 @@ def test_create_note_endpoint():
 
 
 @pytest.mark.e2e
+def test_get_notes_endpoint():
+    """Test GET /api/note endpoint requiring resource_id query param."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+
+    list_response = requests.get(f"{BASE_URL}/api/resource", headers=headers)
+    assert list_response.status_code == 200, _err(list_response, 200)
+    resources = list_response.json()
+    if not resources:
+        pytest.skip("No resources available for note list test")
+
+    resource_id = resources[0]["_id"]
+
+    # First create a note to ensure at least one exists
+    requests.post(
+        f"{BASE_URL}/api/note",
+        headers=headers,
+        json={"resource_id": resource_id, "note": "E2E list test note"},
+    )
+
+    response = requests.get(
+        f"{BASE_URL}/api/note?resource_id={resource_id}", headers=headers
+    )
+    assert response.status_code == 200, _err(response, 200)
+    notes = response.json()
+    assert isinstance(notes, list)
+    assert len(notes) >= 1
+    assert "note" in notes[0]
+
+
+@pytest.mark.e2e
+def test_get_notes_missing_resource_id_returns_400():
+    """Test GET /api/note without resource_id returns 400."""
+    token = get_auth_token()
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{BASE_URL}/api/note", headers=headers)
+    assert response.status_code == 400, _err(response, 400)
+
+
+@pytest.mark.e2e
 def test_note_endpoint_requires_auth():
     """Test that note create requires authentication."""
     response = requests.post(f"{BASE_URL}/api/note", json={"note": "test"})

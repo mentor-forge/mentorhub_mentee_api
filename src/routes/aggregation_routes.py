@@ -5,13 +5,12 @@ Provides endpoints for Resource_Aggregation domain:
 - GET /api/aggregation/<resource_id> - Get aggregation detail with related notes
 """
 
+import logging
 from flask import Blueprint, jsonify
 from api_utils.flask_utils.token import create_flask_token
 from api_utils.flask_utils.breadcrumb import create_flask_breadcrumb
 from api_utils.flask_utils.route_wrapper import handle_route_exceptions
-from api_utils.services import AggregationService
-
-import logging
+from src.services.aggregation_service import AggregationService
 
 logger = logging.getLogger(__name__)
 
