@@ -1,6 +1,6 @@
 # F205 – AggregationService subclass (mutate + detail)
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F204_note_service_subclass`  
 **Description:** Restore Mentee aggregation writes and the `{aggregation, notes}` detail composite on a subclass. Shared 1.0.0 keeps `get_aggregation_for_resource` (no create) plus `_find_aggregation` / `_resource_object_id`. Duration helpers are **not** on the parent — copy them onto this subclass. `add_completion` must import **local** `NoteService`. No routes and no pin in this task.
@@ -76,3 +76,7 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+- Created `src/services/aggregation_service.py` subclassing `SharedAggregationService` with duration helpers (`_parse_iso_duration`, `_format_iso_duration`, `_add_durations`), `_new_aggregation_document`, `_get_or_create_aggregation`, `add_hit`, `add_completion` (calling local `NoteService.create_note`), `get_aggregation_detail` (calling local `NoteService.list_all_notes_for_resource`), and RBAC permission checks.
+- Created `test/services/test_aggregation_service.py` with comprehensive unit test coverage for duration helpers, add_hit, add_completion (RBAC and note creation), and get_aggregation_detail composite.
+- Ran `pipenv run test`, `pipenv run lint`, and `pipenv run build` with all 63 unit tests passing.
