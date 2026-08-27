@@ -1,6 +1,6 @@
 # F206 – Resource, Path, and Event service subclasses
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** `F205_aggregation_service_subclass`  
 **Description:** Restore Mentee BFF enrich on Resource and Path, and a thin Event subclass that calls local `AggregationService.add_hit` on link events. Shared 1.0.0 `get_resource` / `get_path` return raw documents; `create_event` stays on the parent. Do not switch routes and do not pin — unit tests must mock `super()` so they pass against the still-installed `api-utils==0.5.2`.
@@ -104,3 +104,9 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+- Created `src/services/resource_service.py` subclassing `SharedResourceService` with composite `get_resource` returning `{resource, aggregation, notes}`.
+- Created `src/services/path_service.py` subclassing `SharedPathService` with `_collect_resource_ids`, `_enrich_path_resources`, and wrapped `get_path`.
+- Created `src/services/event_service.py` subclassing `SharedEventService` with wrapped `create_event` triggering local `AggregationService.add_hit` on link events.
+- Created unit tests: `test/services/test_resource_service.py`, `test/services/test_path_service.py`, and `test/services/test_event_service.py`.
+- Ran `pipenv run test`, `pipenv run lint`, and `pipenv run build` with all unit tests passing.
