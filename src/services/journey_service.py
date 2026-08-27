@@ -4,8 +4,6 @@ Mentee Journey control: clone-on-GET, enrich, PATCH, promote/advance/complete.
 
 import copy
 import logging
-from bson import ObjectId
-from bson.errors import InvalidId
 
 from api_utils import MongoIO, Config
 from api_utils.mongo_utils import encode_document
@@ -34,17 +32,6 @@ RESTRICTED_UPDATE_FIELDS = [
 
 class JourneyService(SharedJourneyService):
     """Mentee-domain Journey writes and BFF enrich."""
-
-    @classmethod
-    def _validate_object_id(cls, value, field_name):
-        try:
-            ObjectId(value)
-        except (InvalidId, TypeError):
-            raise HTTPBadRequest(f"{field_name} must be a valid MongoDB ObjectId")
-
-    @classmethod
-    def _oid(cls, value):
-        return ObjectId(value)
 
     @classmethod
     def _check_permission(cls, token, operation, journey_id=None):
