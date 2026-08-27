@@ -1,6 +1,6 @@
 # F203 – OpenAPI for 1.0.0 consume GETs
 
-**Status:** Pending  
+**Status:** Shipped  
 **Type:** Feature  
 **Depends On:** none  
 **Description:** First task of the F-EA12 / F-EA13 1.0.0 wave (same PR). Document the consume GETs that shared `create_*_get_routes` factories will mount, without changing existing Journey control, Note POST, Event POST, Aggregation composite, Resource composite, or Path enrich contracts. No Python in this task. The `api-utils==1.0.0` pin is F208 so current 0.5.2 routes stay green until subclasses exist.
@@ -90,3 +90,12 @@ Run all commands from this API repository root.
 The agent must not update files outside this list.
 
 ## Execution Notes
+
+- Updated `docs/openapi.yaml`:
+  - Documented `GET /api/journey/{journey_id}` (plain Journey, 404 on missing/hidden).
+  - Documented `GET /api/note` list with required `resource_id` query, `offset`/`size` headers, `status` filter, `created.at_time` sort.
+  - Documented `GET /api/event` list with `offset`/`size` headers, `type` filter, optional `profile_id` query, `created.at_time` / `type` sort.
+  - Updated Journey, Note, and Event tag descriptions.
+  - Removed obsolete `InfiniteScrollResponse` component schema.
+- Validated YAML syntax with `python3 -c "import yaml; yaml.safe_load(open('docs/openapi.yaml'))"`.
+- Executed `pipenv run test`, `pipenv run lint`, and `pipenv run build` successfully.
