@@ -3,7 +3,7 @@
 ## Current State
 Guidance for LLM Code Assistants - NOTE: We are currently pre-release. At this time, no changes should consider backward compatibility. Likewise, while we anticipate versioning releases in the future at this point, no consideration should be given to bumping any versions beyond managing the internal api_utils spa_utils dependencies. We are in a rapid iteration phase where features can be deprecated and removed without pause. When working in this repo we should keep our eyes out for potential re-usable code that could be migrated to api_utils. This code should be implemented locally, and issues opened in the api_utils repo when it is time to migrate code.
 
-Domain services are implemented locally under `src/services/` as subclasses extending the **`api-utils`** 1.0.0 package (`api_utils.services`):
+Domain services are implemented locally under `src/services/` as subclasses extending the **`api-utils`** 1.0.1 package (`api_utils.services`):
 - `JourneyService`: Mentee controls Journey (get-or-create, profile enrich, PATCH promote/advance/complete).
 - `NoteService`: Inbound RBAC for creating notes (`POST /api/note`).
 - `AggregationService`: Metrics calculation (`add_hit`, `add_completion`, `get_aggregation_detail`).
