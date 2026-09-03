@@ -28,6 +28,7 @@ class TestJourneyRoutes(unittest.TestCase):
         self.profile_id = "A00000000000000000000099"
         self.mock_token = {
             "user_id": "test_user",
+            "display_name": "Test User",
             "roles": ["admin"],
             "profile_id": self.profile_id,
         }

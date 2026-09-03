@@ -20,12 +20,14 @@ class TestEventService(unittest.TestCase):
         self.resource_id = "507f1f77bcf86cd799439012"
         self.token_with_resource = {
             "user_id": "user1",
+            "display_name": "Test User",
             "profile_id": "507f1f77bcf86cd799439011",
             "resource_id": self.resource_id,
             "roles": ["mentee"],
         }
         self.token_without_resource = {
             "user_id": "user1",
+            "display_name": "Test User",
             "profile_id": "507f1f77bcf86cd799439011",
             "roles": ["mentee"],
         }

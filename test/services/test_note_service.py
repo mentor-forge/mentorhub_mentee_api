@@ -26,16 +26,19 @@ class TestNoteService(unittest.TestCase):
         self.resource_id = "507f1f77bcf86cd799439012"
         self.mentee_token = {
             "user_id": "user1",
+            "display_name": "Test User",
             "profile_id": self.profile_id,
             "roles": ["mentee"],
         }
         self.admin_token = {
             "user_id": "admin1",
+            "display_name": "Admin User",
             "profile_id": "507f1f77bcf86cd799439099",
             "roles": ["admin"],
         }
         self.other_token = {
             "user_id": "other1",
+            "display_name": "Other User",
             "profile_id": "507f1f77bcf86cd799439088",
             "roles": ["customer"],
         }

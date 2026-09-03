@@ -5,7 +5,8 @@ environment when set (``pipenv run e2e`` exports the Developer Edition defaults)
 those variables to match a non-default API stack (same values the container / compose uses).
 
 Persona claims align with ``welcome-auth.js`` / ``login.html`` (``profile_id`` is required
-by ``api-utils`` 0.3.0 token validation).
+by ``api-utils`` 1.0.1 token validation). Installed ``Token.to_dict()`` maps JWT
+``display_name`` (or OIDC ``name``) to the application ``display_name`` field.
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ _DEFAULT_JWT_ALGORITHM = "HS256"
 
 # Mike Storey — admin persona from Profile.0.1.0.0.json / welcome-auth.js
 _E2E_SUBJECT = "mike"
-_E2E_NAME = "Mike Storey"
+_E2E_DISPLAY_NAME = "Mike Storey"
 _E2E_ROLES = ("admin",)
 _E2E_PROFILE_ID = "A00000000000000000000001"
 _E2E_CUSTOMER_ID = "D00000000000000000000006"
@@ -35,7 +36,7 @@ def get_auth_token(
     *,
     roles: Iterable[str] | None = None,
     sub: str | None = None,
-    name: str | None = None,
+    display_name: str | None = None,
     profile_id: str | None = None,
     customer_id: str | None = None,
     mentor_id: str | None = None,
@@ -50,7 +51,7 @@ def get_auth_token(
         "iss": issuer,
         "aud": audience,
         "sub": sub or _E2E_SUBJECT,
-        "name": name or _E2E_NAME,
+        "display_name": display_name or _E2E_DISPLAY_NAME,
         "iat": now,
         "exp": now + 10 * 365 * 24 * 60 * 60,
         "roles": list(roles) if roles is not None else list(_E2E_ROLES),

@@ -19,7 +19,11 @@ class TestEventRoutes(unittest.TestCase):
         )
         self.client = self.app.test_client()
 
-        self.mock_token = {"user_id": "test_user", "roles": ["admin"]}
+        self.mock_token = {
+            "user_id": "test_user",
+            "display_name": "Test User",
+            "roles": ["admin"],
+        }
         self.mock_breadcrumb = {
             "at_time": "sometime",
             "correlation_id": "correlation_ID",
