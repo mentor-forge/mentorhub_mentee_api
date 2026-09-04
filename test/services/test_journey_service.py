@@ -93,8 +93,7 @@ class TestJourneyService(unittest.TestCase):
         }
         self.profile_document = {
             "_id": self.profile_id,
-            "name": "test-user",
-            "full_name": "Test User",
+            "display_name": "Test User",
         }
 
     def _mock_config(self, mock_get_config):

@@ -1079,7 +1079,7 @@ components:
     Profile:
       type: object
       description: |
-        Authoritative person record — IdP username in JWT claims, roles and customer
+        Authoritative person record — display identity, roles and customer
         sponsorship on Profile. Embedded read-only on `GET /api/journey`; not
         patchable via Journey endpoints.
       additionalProperties: false
@@ -1089,16 +1089,15 @@ components:
           description: The unique identifier for the Profile.
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
-        name:
-          type: string
-          description: The IDP Username used in JWT Claims
-          pattern: '^[^\s]{1,40}$'
-          example: my-Profile
-        full_name:
+        display_name:
           type: string
           description: Display name from intake (distinct from IdP username)
           pattern: '^[^\t\n]{0,255}$'
           example: Jane Doe
+        cognito_sub:
+          type: string
+          description: Cognito user sub (immutable); Path A idempotency key
+          pattern: '^[^\s]{1,40}$'
         description:
           type: string
           description: A Comment the user adds to their profile
@@ -1128,6 +1127,7 @@ components:
           enum:
             - active
             - archived
+            - provisioned
             - suspended
           example: active
         roles:
