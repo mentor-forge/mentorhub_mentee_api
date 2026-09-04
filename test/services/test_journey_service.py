@@ -23,16 +23,19 @@ class TestJourneyService(unittest.TestCase):
         self.path_id = "B00000000000000000000001"
         self.mock_token = {
             "user_id": "test_user",
+            "display_name": "Test User",
             "roles": ["admin"],
             "profile_id": self.profile_id,
         }
         self.mentee_token = {
             "user_id": "mentee_user",
+            "display_name": "Mentee User",
             "roles": ["mentee"],
             "profile_id": self.profile_id,
         }
         self.other_token = {
             "user_id": "other_user",
+            "display_name": "Other User",
             "roles": ["mentee"],
             "profile_id": "A00000000000000000000088",
         }
@@ -90,8 +93,7 @@ class TestJourneyService(unittest.TestCase):
         }
         self.profile_document = {
             "_id": self.profile_id,
-            "name": "test-user",
-            "full_name": "Test User",
+            "display_name": "Test User",
         }
 
     def _mock_config(self, mock_get_config):

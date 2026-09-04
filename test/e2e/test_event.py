@@ -33,7 +33,8 @@ def test_create_event_endpoint():
 
     context = response_data.get("context", {})
     assert context.get("user_id") == "mike"
-    assert context.get("name") == "Mike Storey"
+    assert context.get("display_name") == "Mike Storey"
+    assert "name" not in context
     assert context.get("roles") == ["admin"]
     assert context.get("profile_id", "").lower() == "a00000000000000000000001"
     assert context.get("customer_id") == "D00000000000000000000006"
