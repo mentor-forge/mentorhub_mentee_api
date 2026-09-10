@@ -27,7 +27,6 @@ def test_get_my_journey_endpoint():
 
     data = response.json()
     assert data["_id"].lower() == profile_id.lower()
-    assert data.get("profile_id", "").lower() == profile_id.lower()
     assert "created" in data
     assert "saved" in data
     assert "library" in data

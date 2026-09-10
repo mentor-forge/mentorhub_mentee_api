@@ -134,7 +134,6 @@ class TestJourneyService(unittest.TestCase):
         self._mock_config(mock_get_config)
         created = {
             "_id": self.profile_id,
-            "profile_id": self.profile_id,
             "status": "active",
             "next": self.template_journey["next"],
         }

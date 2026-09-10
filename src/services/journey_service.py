@@ -83,7 +83,6 @@ class JourneyService(SharedJourneyService):
 
         document = {
             "_id": profile_id,
-            "profile_id": profile_id,
             "status": template.get("status", "active"),
             "library": copy.deepcopy(template.get("library", [])),
             "now": copy.deepcopy(template.get("now", [])),
@@ -92,7 +91,7 @@ class JourneyService(SharedJourneyService):
             "created": breadcrumb,
             "saved": breadcrumb,
         }
-        encode_document(document, ["_id", "profile_id"], [])
+        encode_document(document, ["_id"], [])
         mongo.create_document(config.JOURNEY_COLLECTION_NAME, document)
         created = mongo.get_document(config.JOURNEY_COLLECTION_NAME, profile_id)
         logger.info(f"Created journey {profile_id} from template for user {profile_id}")
