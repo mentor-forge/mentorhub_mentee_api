@@ -106,7 +106,7 @@ paths:
         Return the Journey for the authenticated user with the token owner's Profile
         embedded as a read-only `profile` property. The server resolves the Journey
         using `profile_id` from the JWT. When no Journey exists, the server clones the
-        template Journey (`ffff00000000000000000001`), sets `_id` and `profile_id` to
+        template Journey (`ffff00000000000000000001`), sets `_id` to
         the token's `profile_id`, and returns the new document. The Profile document is
         loaded at read time and is not stored on the Journey collection.
       operationId: getMyJourney
@@ -1036,11 +1036,6 @@ components:
         _id:
           type: string
           description: The unique identifier for the Learning Journey
-          pattern: '^[0-9a-fA-F]{24}$'
-          example: 507f1f77bcf86cd799439011
-        profile_id:
-          type: string
-          description: The Profile ID of the owner of this journey
           pattern: '^[0-9a-fA-F]{24}$'
           example: 507f1f77bcf86cd799439011
         status:
