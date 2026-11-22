@@ -4,9 +4,9 @@ Uses ``JWT_SECRET``, ``JWT_ISSUER``, ``JWT_AUDIENCE``, and ``JWT_ALGORITHM`` fro
 environment when set (``pipenv run e2e`` exports the Developer Edition defaults). Override
 those variables to match a non-default API stack (same values the container / compose uses).
 
-Persona claims align with ``welcome-auth.js`` / ``login.html`` (``profile_id`` is required
-by ``api-utils`` 1.0.1 token validation). Installed ``Token.to_dict()`` maps JWT
-``display_name`` (or OIDC ``name``) to the application ``display_name`` field.
+Persona claims align with ``welcome-auth.js`` / ``login.html``. API Utils 1.0.5
+requires ``profile_id`` and reads the JWT ``display_name`` claim for the
+application ``display_name`` field.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 # Mentee API AWS exit audit
 
-The current Pipfile and lock pin API Utils 1.0.4 from CodeArtifact. The README's
-1.0.3 reference and the blocked 1.0.1 upgrade describe earlier versions.
+Before F212, the Pipfile and lock pinned API Utils 1.0.4 from CodeArtifact.
+The README’s 1.0.3 reference and the retired 1.0.1 tasks describe earlier versions.
 
 | Surface | Current dependency | Migration |
 | --- | --- | --- |
@@ -31,9 +31,8 @@ or production identity-provider changes are needed for this migration.
 The wheel's token factory requires a `profile_id` and uses the JWT
 `display_name` claim for the normalized application field. The Mentee test
 persona already emits both. The current Event E2E assertion also checks
-`context.display_name`. The blocked F209/F210 notes describe a historical
-`context.name` failure. Leave those task records outside this wave and verify
-the Event case in the packaged gate.
+`context.display_name`. The retired F209/F210 notes record a historical
+`context.name` failure. Verify the Event case in the packaged gate.
 
 The wheel exposes `MongoIO.get_document(collection_name, document_id)` and
 `get_documents(collection_name, match, project, sort_by, skip, limit)`.
@@ -41,3 +40,12 @@ Its update method accepts the existing document ID, match, set, push and pull
 arguments. The Mentee service uses the shared `encode_document` helper for
 ObjectId and date conversion. Preserve these interfaces and the current
 service ownership through the dependency and build changes.
+
+## Dependency lock verification
+
+F212 now uses public PyPI and the hash-pinned release wheel. The legacy Pipenv
+wrappers were removed. Use `pipenv run install` to sync and `pipenv lock` to
+regenerate the lock. In a fresh AWS-free environment, lock regeneration, lock
+verification, locked install, lint, 98 unit tests, and compilation passed. The
+hashed requirements export and installed metadata retained the wheel URL and
+SHA-256. Packaged validation follows the container migration.

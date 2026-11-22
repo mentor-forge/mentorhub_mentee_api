@@ -1,6 +1,6 @@
 # F212 – Migrate API dependency source and locking to a Release wheel
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -82,4 +82,15 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+Migrated the Pipfile source to public PyPI and the verified API Utils 1.0.5
+GitHub wheel URL with its SHA-256. Removed the two CodeArtifact Pipenv
+wrappers. The install entry point syncs the committed lock, and native
+`pipenv lock` regenerates it.
+
+Regenerated and verified the lock, then ran the locked install in a fresh
+environment without AWS credentials or profiles. Verified the hashed export,
+installed version and direct-origin metadata. Checked the installed token
+factory, JWT mapping and MongoIO signatures against Mentee usage. The E2E
+fixture already sends the required profile ID and current display name;
+corrected only its obsolete documentation. Lint, 98 unit tests, and
+compilation passed. The packaged gate follows F213.
