@@ -1,6 +1,6 @@
 # F214 – Update API GitHub Actions for AWS-free validation and GHCR publishing
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -75,4 +75,14 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+Removed AWS credential setup, CodeArtifact environment and token steps, build
+arguments, and OIDC permission from the publisher. Preserved main-only GHCR
+publishing and the existing AMD64 and ARM64 targets. Added a separate
+pull-request validation workflow with read-only contents access and no
+persisted checkout credentials. No standalone OIDC guide exists in this repo.
+
+Parsed both workflows and verified their triggers, permissions, Docker inputs,
+and image targets. With AWS variables unset, Pipenv lock verification and
+dependency sync, lint, all 98 unit tests, compilation, and an isolated ARM64
+container build passed. Docker reported the existing shell-form CMD warning.
+Hosted validation follows the pull request.

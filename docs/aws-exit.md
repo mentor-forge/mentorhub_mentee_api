@@ -64,3 +64,19 @@ CodeArtifact or index argument. Installed wheel metadata matched API Utils
 Edition services, docs, OpenAPI, metrics, and authenticated config returned
 200, and the unauthenticated resource endpoint returned 401. All 36 packaged
 end-to-end cases passed, including the Event context `display_name` assertion.
+
+## GitHub Actions verification
+
+Pull requests into main run a read-only validation job. It disables checkout
+credential persistence, verifies and syncs the Pipenv lock, runs lint and
+unit tests, compiles the application, and builds a local container image.
+The job needs no package credentials and does not publish images.
+
+The separate push-to-main workflow uses repository contents read access and
+package write access to publish the existing GHCR image for Linux AMD64 and
+ARM64. It uses GitHub's workflow token for GHCR, and the container downloads
+the same public wheel and hashed runtime dependencies as a local build.
+
+Local workflow checks, lock verification and sync, lint, all 98 unit tests,
+compilation, and an isolated ARM64 build passed with AWS variables unset.
+GitHub-hosted validation evidence is available after opening the pull request.
