@@ -80,3 +80,21 @@ the same public wheel and hashed runtime dependencies as a local build.
 Local workflow checks, lock verification and sync, lint, all 98 unit tests,
 compilation, and an isolated ARM64 build passed with AWS variables unset.
 GitHub-hosted validation evidence is available after opening the pull request.
+
+## Final local acceptance
+
+A fresh checkout and virtual environment passed `pipenv verify`,
+`pipenv run install`, all 98 unit tests, lint, compilation, and the ARM64
+container build. The container reported API Utils 1.0.5. The packaged
+acceptance harness started disposable MongoDB, seeded Developer Edition
+data, and ran the built API on an isolated loopback port. All 36 end-to-end
+cases passed without skips, including the Event context `display_name`
+assertion. A mentee could list resources, a mentor could not create a
+mentee note, and missing credentials, incorrect issuer, audience, or
+signature, expired tokens, and missing profile claims returned HTTP 401
+where applicable. The active Developer Edition stack was left running.
+
+Rollback restores the verified wheel URL and hash together with their
+matching lockfile, followed by a clean install, image rebuild, and packaged
+test run. The migration adds no provider-specific runtime adapter. Hosted
+PR checks and post-merge publication are separate from local acceptance.

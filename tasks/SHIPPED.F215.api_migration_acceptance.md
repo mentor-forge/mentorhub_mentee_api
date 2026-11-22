@@ -1,6 +1,6 @@
 # F215 – Finalize API migration documentation and runtime acceptance
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -74,4 +74,17 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+Updated README and planning dependency instructions for the exact public
+API Utils wheel, native Pipenv sync, locked AWS-free builds, and PR validation.
+Recorded the verified public package and matching-lock rollback in the audit.
+
+Verified a fresh locked install, all 98 unit tests, lint, compilation, and the
+ARM64 container build. The packaged image reported API Utils 1.0.5. Started
+disposable seeded MongoDB and the built API on an isolated loopback port in
+place of restarting the shared stack with `pipenv run api`. All 36 packaged
+E2E tests passed without skips, including the Event context `display_name`
+assertion. A mentee could read resources (200), a mentor could not create a
+mentee note (403), and missing credentials, wrong issuer, audience, or
+signature, expired tokens, and missing profile claims returned 401.
+No runtime changes were needed. Existing build and local test-key warnings
+were observed. Hosted validation runs after the pull request opens.
