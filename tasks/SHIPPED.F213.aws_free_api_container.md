@@ -1,6 +1,6 @@
 # F213 – Remove AWS auth from API Docker builds
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -76,4 +76,18 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+Use the hashed Pipenv export, retain the existing runtime and publish defaults, and validate the tagged local image against disposable seeded services.
+
+Built an ARM64 image with an AWS-free environment using `pipenv run container`.
+The hashed export installed API Utils 1.0.5 from the exact public wheel URL.
+The final installed package metadata matched the published SHA-256, and
+image history had no obsolete AWS index argument or CodeArtifact wiring.
+Preserved the default GHCR tag, port, multi-stage packaging and entrypoint.
+
+Ran the Developer Edition API setup and E2E suite with disposable seeded
+MongoDB, a private Docker network, a random loopback port, and the local JWT
+persona settings. Docs explorer, OpenAPI, metrics, and authenticated config
+returned HTTP 200. An unauthenticated resource request returned HTTP 401. All
+36 packaged E2E cases passed with zero skips, including the Event context
+`display_name` check. The existing shell-form CMD and test-only JWT key-length
+warnings remain.

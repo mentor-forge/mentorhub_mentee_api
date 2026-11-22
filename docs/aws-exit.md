@@ -49,3 +49,18 @@ regenerate the lock. In a fresh AWS-free environment, lock regeneration, lock
 verification, locked install, lint, 98 unit tests, and compilation passed. The
 hashed requirements export and installed metadata retained the wheel URL and
 SHA-256. Packaged validation follows the container migration.
+
+## Container verification
+
+The Docker build installs the committed runtime requirements using Pipenv's
+hashed export and pip's hash verification. The build uses public PyPI and the
+exact API Utils release wheel. Run `pipenv run container` without AWS or
+GitHub credentials. The default GHCR image reference is unchanged, and
+`MENTEE_API_IMAGE` selects an isolated local image tag when needed.
+
+An ARM64 build passed with AWS variables unset, and its image history had no
+CodeArtifact or index argument. Installed wheel metadata matched API Utils
+1.0.5, its release URL, and the published SHA-256. In isolated seeded Developer
+Edition services, docs, OpenAPI, metrics, and authenticated config returned
+200, and the unauthenticated resource endpoint returned 401. All 36 packaged
+end-to-end cases passed, including the Event context `display_name` assertion.
