@@ -1,6 +1,7 @@
 # F210 - Replace token `name` with `display_name`
 
-**Status:** Blocked  
+**Status:** Will not implement
+**Disposition:** Retired as a standalone task. The branch already asserts `display_name` in the Event context test. The current migration pins API Utils 1.0.5 and verifies the packaged token contract.
 **Type:** Feature  
 **Depends On:** `F209_bump_api_utils_1_0_1`  
 **Description:** Complete the remaining API-side work for [F-ES15 / issue #35](https://github.com/mentor-forge/mentorhub_mentee_spa/issues/35) by replacing caller-token uses of `name` with `display_name` in source, tests, and E2E token minting after the shared library bump is in place.
