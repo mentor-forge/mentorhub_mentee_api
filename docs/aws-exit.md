@@ -1,0 +1,43 @@
+# Mentee API AWS exit audit
+
+The current Pipfile and lock pin API Utils 1.0.4 from CodeArtifact. The README's
+1.0.3 reference and the blocked 1.0.1 upgrade describe earlier versions.
+
+| Surface | Current dependency | Migration |
+| --- | --- | --- |
+| `Pipfile`, `Pipfile.lock`, `scripts/pipenv-install.sh`, `scripts/pipenv-lock.sh` | CodeArtifact index and AWS CLI authentication | F212 moves third-party packages to public PyPI and pins the exact public API Utils wheel URI and SHA-256. Use `pipenv run install` to sync the development environment and `pipenv lock` to refresh the lock. |
+| `Dockerfile`, `scripts/docker-build.sh` | Authenticated `PIP_INDEX_URL` build argument populated by AWS CLI | F213 uses the committed runtime lock with hashes and public package sources. Preserve the image name and runtime entry point. |
+| `.github/workflows/docker-push.yml` | AWS OIDC role and CodeArtifact token/index setup | F214 removes AWS authentication, keeps main-branch GHCR publishing, and adds read-only pull request validation. |
+| `README.md`, `tasks/_PLANNING.md` | Developer setup references CodeArtifact | F215 documents locked installation and records final acceptance. |
+
+The public [API Utils 1.0.5 wheel](https://github.com/mentor-forge/mentorhub_api_utils/releases/download/v1.0.5/api_utils-1.0.5-py3-none-any.whl)
+downloaded without credentials and matched the published SHA-256
+`79de3829e2baa294497e08925908645bcea53cdf497d02b6bed71322a503d952`.
+The PyPI project with the same distribution name is unrelated. Use the exact
+wheel URL and digest together. For a later rollback, restore the previously
+verified wheel pin and its matching lock, then repeat clean-install and
+packaged acceptance. Version 1.0.5 is the first verified GitHub-hosted rollback
+floor.
+
+## Runtime contracts
+
+The Mentee API service in Developer Edition configures MongoDB, JWT validation,
+logging, and service ports. Tracked application and test sources contain no
+Cognito, AWS SDK, or AWS endpoint references. Existing identity-bearing data
+does not introduce a runtime AWS service dependency. Preserve JWT validation
+and role checks and retain MongoIO for database access. No OpenAPI, schema,
+or production identity-provider changes are needed for this migration.
+
+The wheel's token factory requires a `profile_id` and uses the JWT
+`display_name` claim for the normalized application field. The Mentee test
+persona already emits both. The current Event E2E assertion also checks
+`context.display_name`. The blocked F209/F210 notes describe a historical
+`context.name` failure. Leave those task records outside this wave and verify
+the Event case in the packaged gate.
+
+The wheel exposes `MongoIO.get_document(collection_name, document_id)` and
+`get_documents(collection_name, match, project, sort_by, skip, limit)`.
+Its update method accepts the existing document ID, match, set, push and pull
+arguments. The Mentee service uses the shared `encode_document` helper for
+ObjectId and date conversion. Preserve these interfaces and the current
+service ownership through the dependency and build changes.

@@ -1,6 +1,6 @@
 # F211 – Audit AWS coupling and release prerequisites
 
-**Status**: Pending
+**Status**: Shipped
 
 **Type**: Feature
 
@@ -73,4 +73,4 @@ AWS inventory, secure backup/restore evidence and separately approved decommissi
 
 ## Execution Notes
 
-Reserved for the execution agent. No implementation, tests, service changes or publication have been performed.
+Reviewed the tracked install/lock wrappers, Docker build, publishing workflow, runtime sources, persona fixtures, service configuration and older blocked tasks. Verified the public API Utils 1.0.5 wheel against its published checksum without credentials and inspected the installed wheel interfaces. The Event E2E case already checks `context.display_name`; retain it in packaged acceptance. Recorded findings and the cutover/rollback policy in `docs/aws-exit.md`. No services were started.
