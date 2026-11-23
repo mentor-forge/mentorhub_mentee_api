@@ -1,6 +1,7 @@
 # F209 - Bump api-utils to 1.0.1 (`token.display_name`)
 
-**Status:** Blocked  
+**Status:** Will not implement
+**Disposition:** Retired as a standalone task. The branch already asserts `display_name` in the Event context test. The current migration pins API Utils 1.0.5 and verifies the packaged token contract.
 **Type:** Feature  
 **Depends On:** none  
 **Description:** Implement the API-side dependency work needed for [F-ES15 / issue #35](https://github.com/mentor-forge/mentorhub_mentee_spa/issues/35): pin `api-utils` to `1.0.1`, audit the installed token contract, and align this API with the shared `display_name` token field without renaming domain document `name` fields.

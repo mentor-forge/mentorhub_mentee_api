@@ -3,7 +3,7 @@
 ## Current State
 Guidance for LLM Code Assistants - NOTE: We are currently pre-release. At this time, no changes should consider backward compatibility. Likewise, while we anticipate versioning releases in the future at this point, no consideration should be given to bumping any versions beyond managing the internal api_utils spa_utils dependencies. We are in a rapid iteration phase where features can be deprecated and removed without pause. When working in this repo we should keep our eyes out for potential re-usable code that could be migrated to api_utils. This code should be implemented locally, and issues opened in the api_utils repo when it is time to migrate code.
 
-Domain services are implemented locally under `src/services/` as subclasses extending the **`api-utils`** 1.0.3 package (`api_utils.services`):
+Domain services are implemented locally under `src/services/` as subclasses extending the **`api-utils`** 1.0.5 package (`api_utils.services`):
 - `JourneyService`: Mentee controls Journey (get-or-create, profile enrich, PATCH promote/advance/complete).
 - `NoteService`: Inbound RBAC for creating notes (`POST /api/note`).
 - `AggregationService`: Metrics calculation (`add_hit`, `add_completion`, `get_aggregation_detail`).
@@ -19,8 +19,15 @@ Basic Service code should be single-collection aligned. Complex services that ne
 
 ## Developer Commands
 
+Run `pipenv run install` to sync development dependencies from the committed
+lockfile. The Pipfile pins the [API Utils 1.0.5 GitHub release wheel](https://github.com/mentor-forge/mentorhub_api_utils/releases/download/v1.0.5/api_utils-1.0.5-py3-none-any.whl)
+by exact URL and SHA-256. Other dependencies come from public PyPI. Local
+container builds and read-only pull request validation use the locked
+dependencies without AWS credentials. Pushes to main publish to GHCR.
+
+
 ```bash
-## Install dependencies (run `mh` first for CodeArtifact auth)
+## Install locked dependencies
 pipenv run install
 
 # start backing db container 

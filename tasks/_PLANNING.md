@@ -63,7 +63,7 @@ Each task file must contain the following sections under H1 and H2 headings.
   - Can include changing existing tests because of modified features.
   - Should always include a description of the tests that should be used to verify completion.
   - In this repo, that typically means some combination of:
-    - `pipenv run install` — refresh dependencies after `Pipfile` / lockfile changes (CodeArtifact auth; run `mh` first if needed)
+    - `pipenv run install` — sync dependencies from the committed lockfile
     - `pipenv run test` — unit tests (pytest, excludes `@pytest.mark.e2e`)
     - `pipenv run lint` — format check (`black --check`)
     - `pipenv run build` — compile Python sources
@@ -119,13 +119,19 @@ If the configurator is unavailable, set the task **Status** to `Blocked` and sto
 
 ## Dependency management
 
-Domain APIs resolve `api-utils` and other packages from **AWS CodeArtifact**. When a task bumps or adds dependencies in `Pipfile` / `Pipfile.lock`, the execution agent must install them with:
+Mentee API uses public PyPI for third-party packages and pins API Utils to
+the exact public GitHub release wheel URL and SHA-256. When changing
+dependencies, regenerate and verify the lock before syncing:
 
 ```bash
+pipenv lock
+pipenv verify
 pipenv run install
 ```
 
-Do **not** use bare `pipenv install` or `pipenv install --dev` in task instructions — those skip the repo’s CodeArtifact auth wrapper (`scripts/pipenv-install.sh`). Run `mh` once per shell session before `pipenv run install` if CodeArtifact credentials are not already available (see `README.md` and `../mentorhub/DeveloperEdition/standards/api_standards.md`).
+Commit the wheel pin and lockfile together. Restore both from a verified
+revision when rolling back. Local builds and pull request validation use the
+locked public sources.
 
 Task **Testing Expectations** and **Goals** should call out `pipenv run install` whenever `Pipfile` or `Pipfile.lock` changes.
 
